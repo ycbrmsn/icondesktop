@@ -40,10 +40,13 @@ body {
 }
 /** 盒子关闭状态 **/
 .iconbox__close {
-  cursor: pointer; background: url(../img/iconbox.png) no-repeat;
+  cursor: pointer; /* background: url(../img/iconbox.png) no-repeat; */
   .iconbox-icontitle {
     display: none;
   }
+}
+.iconbox-bg {
+  position: absolute; left: 0; top: 0;
 }
 .iconbox-checkbox {
   display: block; width: 30px; height: 30px; background: url(../img/checkbox.png) no-repeat;

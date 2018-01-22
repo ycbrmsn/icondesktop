@@ -24,6 +24,7 @@
       desktopPadding: 20, // 桌面内边距
       pageHeight: 50, // 分页栏高度
       closeBoxColor: '#8e8e8e', // 桌面背景颜色
+      closeBoxBackgroundImage: 'img/iconbox.png', // 盒子的背景图片
       closeBoxWidth: 128, // 盒子关闭时的宽度
       closeBoxHeight: 0, // 盒子关闭时的高度，为0时与宽度相同
       closeBoxPadding: 10, // 盒子关闭时的内边距
@@ -172,6 +173,9 @@
           // 处理标题
           handleOverMaxLengthText($boxTitle, dataBox.title, opt.maxChineseCharLength, opt.ellipticalChars);
           $box.append($boxTitle);
+          // 添加盒子背景
+          var $backgroundIcon = $('<img src="' + opt.closeBoxBackgroundImage + '" width="100%" height="100%" class="iconbox-bg"></img>');
+          $box.append($backgroundIcon);
           // 创建盒子内图标
           var checkboxSize = 0;
           for (var j = 0; j < dataBox.children.length; j++) {
@@ -262,8 +266,8 @@
         'height': opt.thumbnailHeight + 'px',
         'margin': verIconInCloseBoxMargin + 'px ' + horIconInCloseBoxMargin + 'px'
       });
-      // 设置盒子内最多显示9个图标
-      var maxShowIconInBox = 9;
+      // 设置盒子内最多显示9个图标，第一个为盒子背景
+      var maxShowIconInBox = 9 + 1;
       $(this).find('.iconbox__close .iconbox-a').each(function () {
         // 此处index从1开始，why?
         if ($(this).index() > maxShowIconInBox) {
@@ -311,6 +315,8 @@
           $this.css('zIndex', 2);
           // 隐藏盒子多选按钮
           $this.find('.iconbox-checkbox__parent').hide();
+          // 隐藏盒子背景图片
+          $this.find('.iconbox-bg').hide();
           // 盒子放大
           $this.animate({  
             'backgroundColor': opt.openBoxColor,
@@ -360,6 +366,8 @@
             });
             // 显示盒子多选按钮
             $this.find('.iconbox-checkbox__parent').show();
+            // 显示盒子背景图片
+            $this.find('.iconbox-bg').show();
             $this.find('.iconbox-a').each(function () {
               if ($(this).index() > maxShowIconInBox) {
                 $(this).hide();
@@ -420,6 +428,7 @@
           });
           mouseDownIconTimeCurrent = new Date().getTime();
           moveIconObj.timeout = setTimeout(function () {
+            // 盒子稍微放大
             var iconLeft = parseInt($this.css('left'));
             var iconTop = parseInt($this.css('top'));
             var iconWidth = parseInt($this.css('width'));
@@ -434,11 +443,21 @@
               'prevHeight': iconHeight + 'px'
             }).css({
               'cursor': 'move',
-              'width': iconWidth + iconWidthChange * 2 + 'px',
-              'height': iconHeight + iconHeightChange * 2 + 'px',
               'left': iconLeft - iconWidthChange + 'px',
-              'top': iconTop - iconHeightChange + 'px'
+              'top': iconTop - iconHeightChange + 'px',
             });
+            if ($this.hasClass('iconbox-a')) {
+              // 如果是图标，则调整图标大小
+              $this.css({
+                'width': iconWidth + iconWidthChange * 2 + 'px',
+                'height': iconHeight + iconHeightChange * 2 + 'px'
+              });
+            } else {
+              // 如果是盒子，则调整盒子的内边距
+              $this.css({
+                'padding': opt.closeBoxPadding + iconWidthChange + 'px'
+              });
+            }
           }, mouseDownIconDuration);
         }
       });
@@ -466,14 +485,16 @@
         e.preventDefault();
         e.stopPropagation();
         var $this = $(this);
-        console.log('up')
-        cancelIconMove($this, moveIconObj);
+        cancelIconMove($this, moveIconObj, opt);
+      });
+      $(this).on('mouseenter', '.icondesktopbox', function (e) {
+        console.log('mouseenter');
       });
       $(this).on('mouseleave', '.icondesktopbox', function (e) {
         e.preventDefault();
         e.stopPropagation();
         var $this = $(this);
-        cancelIconMove($this, moveIconObj);
+        cancelIconMove($this, moveIconObj, opt);
       });
 
       // 点击翻页
@@ -606,9 +627,10 @@
    * 取消移动
    * @param  {[type]} $this       [description]
    * @param  {[type]} moveIconObj [description]
+   * @param  {[type]} opt         [description]
    * @return {[type]}             [description]
    */
-  function cancelIconMove($this, moveIconObj) {
+  function cancelIconMove($this, moveIconObj, opt) {
     // 是否鼠标按下
     if ($this.attr('isMouseDownIcon')) {
       $this.attr({
@@ -619,14 +641,33 @@
       if ($this.attr('isMouseDownMove')) {
         $this.attr({
           'isMouseDownMove': ''
-        }).css({
-          'cursor': 'pointer',
-          'left': $this.attr('prevLeft'),
-          'top': $this.attr('prevTop'),
-          'width': $this.attr('prevWidth'),
-          'height': $this.attr('prevHeight'),
-          'zIndex': 1
         });
+        if ($this.hasClass('iconbox-a')) {
+          // 如果是图标，则调整图标大小
+          $this.animate({
+            'left': $this.attr('prevLeft'),
+            'top': $this.attr('prevTop'),
+            'width': $this.attr('prevWidth'),
+            'height': $this.attr('prevHeight')
+          }, 'fast', 'swing', function () {
+            $this.css({
+              'cursor': 'pointer',
+              'zIndex': 1
+            });
+          });
+        } else {
+          // 如果是盒子，则调整盒子的内边距
+          $this.animate({
+            'left': $this.attr('prevLeft'),
+            'top': $this.attr('prevTop'),
+            'padding': opt.closeBoxPadding + 'px'
+          }, 'fast', 'swing', function () {
+            $this.css({
+              'cursor': 'pointer',
+              'zIndex': 1
+            });
+          });
+        }
         moveIconObj.finishTime = new Date().getTime();
       }
     }
