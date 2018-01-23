@@ -9,6 +9,7 @@
  *   1.0.6 加上图标显示的最大字数的相关限制参数
  *   1.0.8 让盒子和图标可以共存
  *   1.1.0 让盒子和图标可以拖动，并且图标可以拖动到盒子里
+ *   1.1.2 点击图标的标题可编辑
  */
 ;(function (factory) {
   if (typeof define === "function" && define.amd) {
@@ -31,7 +32,7 @@
       closeBoxMargin: 20, // 盒子关闭时的外边距
       closeBoxEnlargeScale: 0.05, // 盒子关闭时的放大比例
       closeBoxTitleHeight: 30, // 盒子关闭时的标题高度
-      closeBoxTitleFontSize: 16, // 盒子关闭时的标题字体大小
+      closeBoxTitleFontSize: 14, // 盒子关闭时的标题字体大小
       thumbnailWidth: 30, // 盒子关闭时里面的小图标宽度
       thumbnailHeight: 0, // 盒子关闭时里面的小图标高度，为0时与宽度相同
       openBoxColor: '#3C3C3C', // 盒子打开时的背景颜色
@@ -41,6 +42,7 @@
       openBoxIconMargin: 20, // 盒子打开时里面的图标的外边距
       maxChineseCharLength: 7, // 图标显示的最大字数
       ellipticalChars: '...', // 图标字数过长截取后添加的字符串
+      ableEditTitle: false, // 标题是否可以修改
       openBoxIconClick: function (data) {}, // 盒子打开时里面的图标点击事件
       data: [
         {
@@ -183,6 +185,13 @@
           $icon.append($iconImg);
           $icon.append($iconTitle);
           $dd.append($icon);
+          if (opt.ableEditTitle) {
+            // 如果能够编辑标题，则加上单行文本框
+            var $iconTitleInput = $('<input type="text" class="iconbox-icontitleinput" value="' + dataIcon.title + '">');
+            $icon.append($iconTitleInput);
+            bindTitleClick($iconTitle, opt);
+            bindTitleInputClick($iconTitleInput, opt);
+          }
         } else {
           // 是盒子
           $box = $(document.createElement('div'));
@@ -231,6 +240,13 @@
             $icon.append($iconImg);
             $icon.append($iconTitle);
             $box.append($icon);
+            if (opt.ableEditTitle) {
+              // 如果能够编辑标题，则加上单行文本框
+              var $iconTitleInput = $('<input type="text" class="iconbox-icontitleinput" value="' + dataIcon.title + '">');
+              $icon.append($iconTitleInput);
+              bindTitleClick($iconTitle, opt);
+              bindTitleInputClick($iconTitleInput, opt);
+            }
           }
           
           var $checkbox = $('<a class="iconbox-checkbox iconbox-checkbox__parent"></a>');
@@ -246,6 +262,13 @@
           } else {
             // 盒子不能选中
             $checkbox.hide();
+          }
+          if (opt.ableEditTitle) {
+            // 如果能够编辑标题，则加上单行文本框
+            var $iconTitleInput = $('<input type="text" class="iconbox-icontitleinput iconbox-titleinput" value="' + dataBox.title + '">');
+            $box.prepend($iconTitleInput);
+            // bindTitleClick($iconTitle, opt);
+            // bindTitleInputClick($iconTitleInput, opt);
           }
           $box.prepend($checkbox);
           $dd.append($box);
@@ -276,13 +299,22 @@
         'height': opt.closeBoxHeight + 'px'
       });
       // 设置盒子标题样式
-      $(this).find('.iconbox-title').css({
+      $(this).find('.iconbox-title,.iconbox-icontitle,.iconbox-icontitleinput').css({
         'height': opt.closeBoxTitleHeight, 
         'lineHeight': opt.closeBoxTitleHeight + 'px', 
         'fontSize': opt.closeBoxTitleFontSize + 'px', 
         'bottom': - opt.closeBoxTitleHeight + 'px',
         'position': 'absolute'
       });
+      // 设置盒子标题编辑输入框样式
+      // $(this).find('.iconbox-titleinput').css({
+      //   'height': opt.closeBoxTitleHeight - 9, 
+      //   'lineHeight': opt.closeBoxTitleHeight + 'px', 
+      //   'fontSize': opt.closeBoxTitleFontSize + 'px', 
+      //   'left': '0px',
+      //   'bottom': - opt.closeBoxTitleHeight + 2 + 'px',
+      //   'position': 'absolute'
+      // });
       // 计算盒子内小图标间距，固定为九宫格排列
       var horIconInCloseBoxMargin = ((opt.closeBoxWidth - opt.closeBoxPadding * 2) / 3 - opt.thumbnailWidth) / 2;
       var verIconInCloseBoxMargin = ((opt.closeBoxHeight - opt.closeBoxPadding * 2) / 3 - opt.thumbnailHeight) / 2;
@@ -295,7 +327,9 @@
         'margin': verIconInCloseBoxMargin + 'px ' + horIconInCloseBoxMargin + 'px'
       });
       // 设置盒子内最多显示9个图标，第一个为checkbox，第二个为label，第三个为盒子背景
-      var maxShowIconInBox = 8 + 3;
+      var otherThingNumInBox = 3;
+      opt.otherThingNumInBox = otherThingNumInBox;
+      var maxShowIconInBox = 8 + opt.otherThingNumInBox;
       $(this).find('.iconbox__close .iconbox-a').each(function () {
         // 此处index从0开始
         if ($(this).index() > maxShowIconInBox) {
@@ -344,6 +378,10 @@
           $this.find('.iconbox-checkbox__parent').hide();
           // 隐藏盒子背景图片
           $this.find('.iconbox-bg').hide();
+          // 隐藏盒子内标题编辑框
+          $this.find('.iconbox-icontitleinput:visible').focus().blur();
+          // 隐藏标题编辑输入框
+          $this.find('.iconbox-icontitleinput').hide();
           // 盒子放大
           $this.animate({  
             'backgroundColor': opt.openBoxColor,
@@ -356,6 +394,8 @@
             ableClick = true;
             // 显示图标多选按钮
             $this.find('.iconbox-checkbox__children').show();
+            // 显示盒子内图标标题
+            $this.find('.iconbox-icontitle').show();
           });
           // 放大标题
           $this.find('.iconbox-title').css({
@@ -378,6 +418,10 @@
           $this.removeClass('iconbox__open').addClass('iconbox__close');
           // 隐藏图标多选按钮
           $this.find('.iconbox-checkbox__children').hide();
+          // 隐藏盒子内标题编辑框
+          $this.find('.iconbox-icontitleinput:visible').focus().blur();
+          // 隐藏盒子内图标标题
+          $this.find('.iconbox-icontitle').hide();
           // 盒子缩小
           $this.animate({
             'backgroundColor': opt.closeBoxColor,
@@ -392,7 +436,9 @@
               'backgroundColor': ''
             });
             // 显示盒子多选按钮
-            $this.find('.iconbox-checkbox__parent').show();
+            if (opt.data[getIconIndex($this)].ableChecked) {
+              $this.find('.iconbox-checkbox__parent').show();
+            }
             // 显示盒子背景图片
             $this.find('.iconbox-bg').show();
             $this.find('.iconbox-a').each(function () {
@@ -430,6 +476,50 @@
       $(this).on('click', '.iconbox-a', function (e) {
         if ($(this).parents('.iconbox').hasClass('iconbox__open')) {
           e.stopPropagation();
+        }
+      });
+
+      // 点击标题可编辑
+      // $(this).on('click', '.iconbox-icontitle,.iconbox-title', function (e) {
+      //   if (opt.ableEditTitle) {
+      //     e.stopPropagation();
+      //     $(this).hide().siblings('.iconbox-icontitleinput').show().focus().select();
+      //   }
+      // });
+
+      // 阻止冒泡触发拖动事件等
+      $(this).on('mousedown', '.iconbox-icontitleinput', function (e) {
+        if (opt.ableEditTitle) {
+          e.stopPropagation();
+        }
+      });
+      // 阻止冒泡触发拖动事件等
+      $(this).on('mouseup', '.iconbox-icontitleinput', function (e) {
+        if (opt.ableEditTitle) {
+          e.stopPropagation();
+        }
+      });
+      // 阻止盒子标题栏点击冒泡，而图标的阻止冒泡事件写在bindTitleClick方法中
+      $(this).on('click', '.iconbox-title', function (e) {
+        if (opt.ableEditTitle) {
+          e.stopPropagation();
+          $(this).hide().siblings('.iconbox-icontitleinput').show().focus().select();          
+        }
+      });
+      // 阻止盒子标题编辑框冒泡，图标的写在bindTitleInputClick方法中
+      $(this).on('click', '.iconbox-titleinput', function (e) {
+        if (opt.ableEditTitle) {
+          e.stopPropagation();
+        }
+      });
+
+      // 标题编辑栏失去焦点保存新标题
+      $(this).on('blur', '.iconbox-icontitleinput', function (e) {
+        updateTitle($(this), opt, e);
+      });
+      $(this).on('keydown', '.iconbox-icontitleinput', function (e) {
+        if (e.keyCode == 13) {
+          updateTitle($(this), opt, e);
         }
       });
 
@@ -580,6 +670,10 @@
           }
         }
         return checkedData;
+      },
+      getData: function () {
+        var allData = jQuery.extend(true, {}, opt.data);
+        return allData;
       }
     }
   };
@@ -651,6 +745,22 @@
     $dom.text(shortTitle);
   }
 
+  function updateTitle($this, opt, e) {
+    if (opt.ableEditTitle) {
+      if (e) {
+        e.stopPropagation();
+      }
+      var text = $this.val();
+      var $iconTitle = $this.siblings('.iconbox-icontitle,.iconbox-title');
+      handleOverMaxLengthText($iconTitle, text, opt.maxChineseCharLength, opt.ellipticalChars);
+      $this.hide();
+      $iconTitle.show();
+      // 更新data
+      var data = getIconData($this.parent(), opt);
+      data.title = text;
+    }
+  }
+
   function moveIcon($this, moveIconObj, opt, e) {
     // 图标处于在移动状态
     if ($this.attr('isMouseDownMove')) {
@@ -703,7 +813,6 @@
               // 隐藏指示位置图标
               moveIconObj.$flagDom.hide();
             } else if ($iconBelow.hasClass('iconbox__close')) {
-              console.log($iconBelow)
               // 如果是在一个盒子上方，则盒子放大
               var iconLeft = parseInt($iconBelow.css('left'));
               var iconTop = parseInt($iconBelow.css('top'));
@@ -924,6 +1033,39 @@
   }
 
   /**
+   * 获得图标在盒子中的序数
+   * @param  {[type]} $icon [description]
+   * @param  {[type]} opt   [description]
+   * @return {[type]}       [description]
+   */
+  function getIconChildIndex($icon, opt) {
+    // 目前是三个其他图标
+    return $icon.index() - opt.otherThingNumInBox;
+  }
+
+  /**
+   * 获得图标对应的data
+   * @param  {[type]} $icon [description]
+   * @param  {[type]} opt   [description]
+   * @return {[type]}       [description]
+   */
+  function getIconData($icon, opt) {
+    var srcData = opt.data;
+    var data;
+    if ($icon.hasClass('icondesktopbox')) {
+      // 如果是第一层盒子/图标
+      data = srcData[getIconIndex($icon)];
+    } else {
+      // 如果是盒子里面的图标
+      // 第一层
+      data = srcData[getIconIndex($icon.parent())];
+      // 第二层
+      data = data.children[getIconChildIndex($icon, opt)];
+    }
+    return data;
+  }
+
+  /**
    * 合并节点数据，仅限于$this是图标，$iconBelow是盒子/图标
    * @param  {[type]} data     基本数据
    * @param  {[type]} srcIndex 移动的图标的序数
@@ -1041,7 +1183,7 @@
       bindCheckboxClick($this.children('.iconbox-checkbox'), newData.children[newData.children.length - 1], newData);
       $this.appendTo($iconBelow);
       // 判断是否已经超过9个图标
-      if ($this.index() > 8 + 3) {
+      if ($this.index() > 8 + opt.otherThingNumInBox) {
         $this.hide();
       }
     }
@@ -1095,6 +1237,25 @@
     });
   }
 
+  // 点击图标标题可编辑，写在这里主要用于阻止冒泡
+  function bindTitleClick($dom, opt) {
+    $dom.click(function (e) {
+      if (opt.ableEditTitle) {
+        e.stopPropagation();
+        $(this).hide().siblings('.iconbox-icontitleinput').show().focus().select();
+      }
+    });
+  }
+
+  // 点击图标标题文本框，写在这里主要用于阻止冒泡
+  function bindTitleInputClick($dom, opt) {
+    $dom.click(function (e) {
+      if (opt.ableEditTitle) {
+        e.stopPropagation();
+      }
+    });
+  }
+
   /** 绑定图标的点击事件 **/
   function bindClick($dom, data, opt, moveIconObj) {
     $dom.off().click(function (e) {
@@ -1104,10 +1265,16 @@
         // 在盒子里时
         // 盒子打开时方可点击
         if ($iconBox.hasClass('iconbox__open')) {
+          // 隐藏标题编辑输入框
+          $dom.find('.iconbox-icontitleinput').hide();
+          $dom.find('.iconbox-icontitle').show();
           opt.openBoxIconClick(data, e);
         }
       } else {
         // 不在盒子里时
+        // 隐藏标题编辑输入框
+        $dom.find('.iconbox-icontitleinput').hide();
+        $dom.find('.iconbox-icontitle').show();
         // 避免拖动后自动打开图标
         var currentTime = new Date().getTime();
         if (currentTime - moveIconObj.finishTime > moveIconObj.openPeriod) {
