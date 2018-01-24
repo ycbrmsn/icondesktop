@@ -10,7 +10,6 @@
  *   1.0.8 让盒子和图标可以共存
  *   1.1.0 让盒子和图标可以拖动，并且图标可以拖动到盒子里
  *   1.1.2 点击图标的标题可编辑
- *   1.1.3 重构代码
  */
 ;(function (factory) {
   if (typeof define === "function" && define.amd) {
@@ -83,27 +82,288 @@
       opt.thumbnailHeight = opt.thumbnailWidth
     }
     this.each(function () {
+      var width = $(this).width();
+      var height = $(this).height();
+
       // *******************************初始化状态开始*************************************
-      // 初始化数据
-      initData($(this), opt);
-      // 初始化所有节点
-      initDoms($(this), opt);
-      // 初始化所有样式
-      initStyles($(this), opt);      
+      // 计算水平可以放几个盒子
+      // (桌面宽度 - 桌面上下的内边距 + 图标之间的外边距) / (图标的宽度 + 图标的外边距)
+      var horSize = Math.floor((width - opt.desktopPadding * 2 + opt.closeBoxMargin) / (opt.closeBoxWidth + opt.closeBoxMargin));
+      // 计算垂直方向可以放几个盒子
+      // (桌面高度 - 分页栏高度 - 上边桌面的内边距 + 图标之间的外边距) / (图标高度 + 图标名称 + 图标外边距)
+      var verSize = Math.floor((height - opt.pageHeight - opt.desktopPadding + opt.closeBoxMargin) / (opt.closeBoxHeight + opt.closeBoxTitleHeight + opt.closeBoxMargin));
+      // 一页的盒子数量
+      var pageSize = horSize * verSize;
+      // 页数
+      var pages = Math.ceil(opt.data.length / pageSize);
+
+      // 构造节点
+      var $dl, $dd;
+      // 盒子部分
+      var $box, $boxTitle;
+      // 盒子内图标部分
+      var $icon, $iconTitle, $iconImg;
+      // 分页栏部分
+      var $pagePanel, $pageBox, $pageNum;
+      // 循环对象
+      var dataBox, dataIcon;
+      // 拖动桌面上的盒子或者图标
+      var moveIconObj = {
+        // 鼠标按下时的位置，取mousemove中的数据
+        mouseDownIconCurrentPoint: {},
+        // 前一次鼠标按下时的位置，取mousemove中的数据
+        mouseDownIconPrevPoint: {},
+        // 结束拖动盒子/图标的时间
+        finishTime: 0,
+        // 拖动盒子/图标后能够打开盒子的时间间隔100毫秒
+        openPeriod: 100,
+        // 一个空jquery对象，用来置空对比的下方icon
+        $empty: $(''),
+        // 拖动对象是否位于一个盒子/图标上
+        isSuspended: false,
+        // 盒子放大单边需要增加的宽度
+        closeBoxEnlargeWidth: opt.closeBoxWidth * opt.closeBoxEnlargeScale,
+        // 盒子放大单边需要增加的高度u
+        closeBoxEnlargeHeight: opt.closeBoxHeight * opt.closeBoxEnlargeScale,
+        $closeBoxBackground: $('<img src="' + opt.closeBoxBackgroundImage + '" class="iconbox-bg" width="'
+          + opt.closeBoxWidth + '" height="' + opt.closeBoxHeight + '" style="display: none;">')
+      };
+      $dl = $(document.createElement('dl'));
+      $dl.addClass('icondesktop-slidebox');
+      $pagePanel = $(document.createElement('div'));
+      $pagePanel.addClass('icondesktop-pagination');
+      $pageBox = $(document.createElement('div'));
+      $pageBox.addClass('icondesktop-pagebox');
+      $pagePanel.append($pageBox);
+      for (var i = 0; i < opt.data.length; i++) {
+        dataBox = opt.data[i];
+        // 下一页
+        if (i % pageSize === 0) {
+          // 创建新桌面
+          $dd = $(document.createElement('dd'));
+          $dd.addClass('icondesktop-slide');
+          $dl.append($dd);
+          // 创建页码图标
+          $pageNum = $(document.createElement('a'));
+          $pageNum.addClass('icondesktop-pageitem');
+          if (i === 0) {
+            $pageNum.addClass('icondesktop-pageitem__active');
+          }
+          // $pageNum.text(Math.ceil(i / pageSize));
+          $pageBox.append($pageNum);
+        }
+        // 如果是盒子，则创建盒子；如果是图标，则创建图标
+        if (dataBox.img) {
+          // 是图标
+          dataIcon = dataBox;
+          $icon = $(document.createElement('a'));
+          $icon.addClass('iconbox-a icondesktopbox');
+          $iconTitle = $(document.createElement('label'));
+          $iconTitle.addClass('iconbox-icontitle');
+          // 处理标题
+          handleOverMaxLengthText($iconTitle, dataIcon.title, opt.maxChineseCharLength, opt.ellipticalChars);
+          $iconImg = $(document.createElement('img'));
+          $iconImg.addClass('iconbox-img');
+          $iconImg.attr('src', dataIcon.img);
+          if (dataIcon.extraClass) {
+            $iconImg.addClass(dataIcon.extraClass);
+          }
+          if (dataIcon.ableChecked) {
+            // 加上多选按钮
+            var $checkboxChildren = $('<a class="iconbox-checkbox iconbox-checkbox__children"></a>');
+            $icon.append($checkboxChildren);
+            bindCheckboxClick($checkboxChildren, dataIcon);
+            // 如果是选中
+            if (dataIcon.checked) {
+              changeCheckboxFlagAndView($checkboxChildren, 2);
+              checkboxSize++;
+            } else {
+              changeCheckboxFlagAndView($checkboxChildren, 0);
+            }
+          }
+          bindClick($icon, dataIcon, opt, moveIconObj);
+          $icon.append($iconImg);
+          $icon.append($iconTitle);
+          $dd.append($icon);
+          if (opt.ableEditTitle) {
+            // 如果能够编辑标题，则加上单行文本框
+            var $iconTitleInput = $('<input type="text" class="iconbox-icontitleinput" value="' + dataIcon.title + '">');
+            $icon.append($iconTitleInput);
+            bindTitleClick($iconTitle, opt);
+            bindTitleInputClick($iconTitleInput, opt);
+          }
+        } else {
+          // 是盒子
+          $box = $(document.createElement('div'));
+          $box.addClass('iconbox iconbox__close icondesktopbox');
+          if (dataBox.extraClass) {
+            $box.addClass(dataBox.extraClass);
+          }
+          $boxTitle = $(document.createElement('label'));
+          $boxTitle.addClass('iconbox-title');
+          // 处理标题
+          handleOverMaxLengthText($boxTitle, dataBox.title, opt.maxChineseCharLength, opt.ellipticalChars);
+          $box.append($boxTitle);
+          if (opt.ableEditTitle) {
+            // 如果能够编辑标题，则加上单行文本框
+            var $iconTitleInput = $('<input type="text" class="iconbox-icontitleinput iconbox-titleinput" value="' + dataBox.title + '">');
+            $box.append($iconTitleInput);
+          }
+          // 添加盒子背景
+          var $backgroundIcon = $('<img src="' + opt.closeBoxBackgroundImage + '" width="100%" height="100%" class="iconbox-bg">');
+          $box.append($backgroundIcon);
+          // 创建盒子内图标
+          var checkboxSize = 0;
+          for (var j = 0; j < dataBox.children.length; j++) {
+            dataIcon = dataBox.children[j];
+            $icon = $(document.createElement('a'));
+            $icon.addClass('iconbox-a');
+            $iconTitle = $(document.createElement('label'));
+            $iconTitle.addClass('iconbox-icontitle');
+            // 处理标题
+            handleOverMaxLengthText($iconTitle, dataIcon.title, opt.maxChineseCharLength, opt.ellipticalChars);
+            $iconImg = $(document.createElement('img'));
+            $iconImg.addClass('iconbox-img');
+            $iconImg.attr('src', dataIcon.img);
+            if (dataIcon.extraClass) {
+              $iconImg.addClass(dataIcon.extraClass);
+            }
+            if (dataIcon.ableChecked) {
+              // 加上多选按钮
+              var $checkboxChildren = $('<a class="iconbox-checkbox iconbox-checkbox__children" style="display: none;"></a>');
+              $icon.append($checkboxChildren);
+              bindCheckboxClick($checkboxChildren, dataIcon, dataBox);
+              // 如果是选中
+              if (dataIcon.checked) {
+                changeCheckboxFlagAndView($checkboxChildren, 2);
+                checkboxSize++;
+              } else {
+                changeCheckboxFlagAndView($checkboxChildren, 0);
+              }
+            }
+            bindClick($icon, dataIcon, opt, moveIconObj);
+            $icon.append($iconImg);
+            $icon.append($iconTitle);
+            $box.append($icon);
+            if (opt.ableEditTitle) {
+              // 如果能够编辑标题，则加上单行文本框
+              var $iconTitleInput = $('<input type="text" class="iconbox-icontitleinput" value="' + dataIcon.title + '">');
+              $icon.append($iconTitleInput);
+              bindTitleClick($iconTitle, opt);
+              bindTitleInputClick($iconTitleInput, opt);
+            }
+          }
+          
+          var $checkbox = $('<a class="iconbox-checkbox iconbox-checkbox__parent"></a>');
+          if (dataBox.ableChecked) {
+            // 盒子可以选中
+            bindCheckboxClick($checkbox, dataBox);
+            // checkboxSize只会小于等于dataBox.children.length
+            if (checkboxSize == dataBox.children.length) {
+              changeCheckboxFlagAndView($checkbox, 2);
+            } else if (checkboxSize > 0) {
+              changeCheckboxFlagAndView($checkbox, 1);
+            }
+          } else {
+            // 盒子不能选中
+            $checkbox.hide();
+          }
+          $box.prepend($checkbox);
+          $dd.append($box);
+        }
+      }
+      $(this).append($dl);
+      $(this).append($pagePanel);
+
+      // 设置各个桌面大小
+      $(this).find('.icondesktop-slide').width(width).height(height);
+      // 设置分页栏
+      $(this).find('.icondesktop-pagination').height(opt.pageHeight).css({
+        'bottom': '0px'
+      });
+      // 设置桌面背景颜色，用于还原的时候可恢复
+      $(this).css({
+        'backgroundColor': opt.closeBoxColor
+      });
+      // 设置盒子样式
+      $(this).find('.iconbox__close').css({
+        'padding': opt.closeBoxPadding,
+        'width': opt.closeBoxWidth - opt.closeBoxPadding * 2 + 'px',
+        'height': opt.closeBoxHeight - opt.closeBoxPadding * 2 + 'px'
+      });
+      // 设置桌面图标样式
+      $(this).find('.iconbox-a.icondesktopbox').css({
+        'width': opt.closeBoxWidth + 'px',
+        'height': opt.closeBoxHeight + 'px'
+      });
+      // 设置盒子标题样式
+      $(this).find('.iconbox-title,.iconbox-icontitle,.iconbox-icontitleinput').css({
+        'height': opt.closeBoxTitleHeight, 
+        'lineHeight': opt.closeBoxTitleHeight + 'px', 
+        'fontSize': opt.closeBoxTitleFontSize + 'px', 
+        'bottom': - opt.closeBoxTitleHeight + 'px',
+        'position': 'absolute'
+      });
+      // 设置盒子标题编辑输入框样式
+      // $(this).find('.iconbox-titleinput').css({
+      //   'height': opt.closeBoxTitleHeight - 9, 
+      //   'lineHeight': opt.closeBoxTitleHeight + 'px', 
+      //   'fontSize': opt.closeBoxTitleFontSize + 'px', 
+      //   'left': '0px',
+      //   'bottom': - opt.closeBoxTitleHeight + 2 + 'px',
+      //   'position': 'absolute'
+      // });
+      // 计算盒子内小图标间距，固定为九宫格排列
+      var horIconInCloseBoxMargin = ((opt.closeBoxWidth - opt.closeBoxPadding * 2) / 3 - opt.thumbnailWidth) / 2;
+      var verIconInCloseBoxMargin = ((opt.closeBoxHeight - opt.closeBoxPadding * 2) / 3 - opt.thumbnailHeight) / 2;
+      opt.horIconInCloseBoxMargin = horIconInCloseBoxMargin;
+      opt.verIconInCloseBoxMargin = verIconInCloseBoxMargin;
+      // 设置盒子内小图标大小、外边距
+      $(this).find('.iconbox__close .iconbox-a').css({
+        'width': opt.thumbnailWidth + 'px', 
+        'height': opt.thumbnailHeight + 'px',
+        'margin': verIconInCloseBoxMargin + 'px ' + horIconInCloseBoxMargin + 'px'
+      });
+      // 设置盒子内最多显示9个图标，第一个为checkbox，第二个为input，第三个为label，第四个为盒子背景
+      var otherThingNumInBox = 4;
+      opt.otherThingNumInBox = otherThingNumInBox;
+      var maxShowIconInBox = 8 + opt.otherThingNumInBox;
+      $(this).find('.iconbox__close .iconbox-a').each(function () {
+        // 此处index从0开始
+        if ($(this).index() > maxShowIconInBox) {
+          $(this).hide();
+        }
+      });
+      
+      // 根据页数设置所有桌面的总长度
+      $(this).find('.icondesktop-slidebox').width(width * pages);
+      // 盒子/图标定位
+      $(this).find('.icondesktopbox').each(function (index, element) {
+        // 此处index从0开始
+        // 垂直序数，从0开始
+        var topIndex = Math.floor(index % pageSize / horSize);
+        // 水平序数，从0开始
+        var leftIndex = index % horSize;
+        $(this).css({
+          top: topIndex * (opt.closeBoxHeight + opt.closeBoxMargin + opt.closeBoxTitleHeight) + opt.desktopPadding + 'px', 
+          left: leftIndex * (opt.closeBoxWidth + opt.closeBoxMargin) + opt.desktopPadding + 'px'
+        });
+      });
       // *******************************初始化状态结束*************************************
 
       // 打开/关闭盒子
       var openBox = {};
+      var ableClick = true; // 避免多次点击动画错乱
       $(this).on('click', '.iconbox', function () {
         var $this = $(this);
         // 避免拖动后自动打开盒子
         var currentTime = new Date().getTime();
-        if (currentTime - opt.moveIconObj.finishTime < opt.moveIconObj.openPeriod) {
+        if (currentTime - moveIconObj.finishTime < moveIconObj.openPeriod) {
           return false;
         }
         // 防止多次点击
-        if (opt.ableClickBox) {
-          opt.ableClickBox = false;
+        if (ableClick) {
+          ableClick = false;
         } else {
           return false;
         }
@@ -129,13 +389,13 @@
           // 盒子放大
           $this.animate({  
             'backgroundColor': opt.openBoxColor,
-            'width': opt.width - opt.openBoxPadding * 2 + 'px',
-            'height': opt.height - opt.openBoxPadding * 2 + 'px',
+            'width': width - opt.openBoxPadding * 2 + 'px',
+            'height': height - opt.openBoxPadding * 2 + 'px',
             'left': '0',
             'top': '0',
             'padding': opt.openBoxPadding
           }, function () {
-            opt.ableClickBox = true;
+            ableClick = true;
             // 显示图标多选按钮
             $this.find('.iconbox-checkbox__children').show();
             // 显示盒子内图标标题
@@ -192,11 +452,11 @@
             // 显示盒子背景图片
             $this.find('.iconbox-bg').show();
             $this.find('.iconbox-a').each(function () {
-              if ($(this).index() > opt.maxShowIconInBox) {
+              if ($(this).index() > maxShowIconInBox) {
                 $(this).hide();
               }
             });
-            opt.ableClickBox = true;
+            ableClick = true;
           });
           // 缩小标题
           $this.find('.iconbox-title').animate({
@@ -216,7 +476,7 @@
           $this.find('.iconbox-a').animate({
             'width': opt.thumbnailWidth + 'px',
             'height': opt.thumbnailHeight + 'px',
-            'margin': opt.verIconInCloseBoxMargin + 'px ' + opt.horIconInCloseBoxMargin + 'px'
+            'margin': verIconInCloseBoxMargin + 'px ' + horIconInCloseBoxMargin + 'px'
           });
         }
       });
@@ -299,11 +559,11 @@
             'isMouseDownIcon': true
           });
           mouseDownIconTimeCurrent = new Date().getTime();
-          opt.moveIconObj.timeout = setTimeout(function () {
+          moveIconObj.timeout = setTimeout(function () {
             // 生成一个半透明的指示位置图标
             var $flagDom = $($this.clone());
             $flagDom.removeClass('icondesktopbox');
-            opt.moveIconObj.$flagDom = $flagDom;
+            moveIconObj.$flagDom = $flagDom;
             // 指示位置图标透明度
             $flagDom.css('opacity', 0.3);
             // 拖动图标在指示位置图标之上
@@ -318,7 +578,7 @@
             var iconHeight = parseInt($this.css('height'));
             var iconWidthChange = Math.ceil(iconWidth * opt.closeBoxEnlargeScale);
             var iconHeightChange = Math.ceil(iconHeight * opt.closeBoxEnlargeScale);
-            // TODO 此处可能有问题
+            // TODO 此处有问题，待斟酌
             $this.attr({
               'isMouseDownMove': true,
               'prevLeft': iconLeft + 'px',
@@ -346,6 +606,9 @@
           }, mouseDownIconDuration);
         }
       });
+      var $closeBoxBackground = moveIconObj.$closeBoxBackground;
+      moveIconObj.$prevIconBelow = moveIconObj.$empty;
+      $(this).find('.icondesktop-slidebox').append(moveIconObj.$closeBoxBackground);
       // 鼠标拖动盒子/图标事件
       $(this).on('mousemove', '.icondesktopbox', function (e) {
         if (ev) {
@@ -355,14 +618,14 @@
         e.stopPropagation();
         var $this = $(this);
         // 移动盒子/图标
-        moveIcon($this, opt, e);
+        moveIcon($this, moveIconObj, opt, e);
       });
       $(this).on('mouseup', '.icondesktopbox', function (e) {
         e.preventDefault();
         e.stopPropagation();
         var $this = $(this);
         // 取消盒子/图标移动
-        cancelIconMove($this, opt);
+        cancelIconMove($this, moveIconObj, opt);
       });
       $(this).on('mouseenter', '.icondesktopbox', function (e) {
         
@@ -372,14 +635,15 @@
         e.stopPropagation();
         var $this = $(this);
         // 取消盒子/图标移动
-        cancelIconMove($this, opt);
+        cancelIconMove($this, moveIconObj, opt);
       });
 
       // 点击翻页
+      var ableTurnPage = true; // 是否能够翻页
       $(this).on('click', '.icondesktop-pageitem', function () {
         // index从0开始
         var pageIndex = $(this).index();
-        turnPage($(this).parents('.icondesktop'), pageIndex, opt.width, opt.pages);
+        turnPage($(this).parents('.icondesktop'), pageIndex, width, pages);
       })
 
       // 滑动翻页
@@ -394,10 +658,10 @@
         var currentX = e.pageX;
         if (isMouseDown) {
           if (currentX - mousedownX > minDistance) { // 有效右滑，上一页
-            turnPage($(this), currentPageIndex - 1, opt.width, opt.pages);
+            turnPage($(this), currentPageIndex - 1, width, pages);
             isMouseDown = false;
           } else if (currentX - mousedownX < - minDistance) { // 有效左滑，下一页
-            turnPage($(this), currentPageIndex + 1, opt.width, opt.pages);
+            turnPage($(this), currentPageIndex + 1, width, pages);
             isMouseDown = false;
           }
         }
@@ -436,307 +700,6 @@
       }
     }
   };
-
-  /**
-   * 初始化数据
-   * @param  {[type]} $root [description]
-   * @param  {[type]} opt   [description]
-   * @return {[type]}       [description]
-   */
-  function initData($root, opt) {
-    var width = $root.width();
-    var height = $root.height();
-    opt.width = width;
-    opt.height = height;
-    // 计算水平可以放几个盒子
-    // (桌面宽度 - 桌面上下的内边距 + 图标之间的外边距) / (图标的宽度 + 图标的外边距)
-    var horSize = Math.floor((width - opt.desktopPadding * 2 + opt.closeBoxMargin) / (opt.closeBoxWidth + opt.closeBoxMargin));
-    // 计算垂直方向可以放几个盒子
-    // (桌面高度 - 分页栏高度 - 上边桌面的内边距 + 图标之间的外边距) / (图标高度 + 图标名称 + 图标外边距)
-    var verSize = Math.floor((height - opt.pageHeight - opt.desktopPadding + opt.closeBoxMargin) / (opt.closeBoxHeight + opt.closeBoxTitleHeight + opt.closeBoxMargin));
-    // 一页的盒子数量
-    var pageSize = horSize * verSize;
-    // 页数
-    var pages = Math.ceil(opt.data.length / pageSize);
-    opt.horSize = horSize;
-    opt.verSize = verSize;
-    opt.pageSize = pageSize;
-    opt.pages = pages;
-
-    // 计算盒子内小图标间距，固定为九宫格排列
-    var horIconInCloseBoxMargin = ((opt.closeBoxWidth - opt.closeBoxPadding * 2) / 3 - opt.thumbnailWidth) / 2;
-    var verIconInCloseBoxMargin = ((opt.closeBoxHeight - opt.closeBoxPadding * 2) / 3 - opt.thumbnailHeight) / 2;
-    opt.horIconInCloseBoxMargin = horIconInCloseBoxMargin;
-    opt.verIconInCloseBoxMargin = verIconInCloseBoxMargin;
-
-    // 拖动桌面上的盒子或者图标
-    var moveIconObj = {
-      // 鼠标按下时的位置，取mousemove中的数据
-      mouseDownIconCurrentPoint: {},
-      // 前一次鼠标按下时的位置，取mousemove中的数据
-      mouseDownIconPrevPoint: {},
-      // 结束拖动盒子/图标的时间
-      finishTime: 0,
-      // 拖动盒子/图标后能够打开盒子的时间间隔100毫秒
-      openPeriod: 100,
-      // 一个空jquery对象，用来置空对比的下方icon
-      $empty: $(''),
-      // 拖动对象是否位于一个盒子/图标上
-      isSuspended: false,
-      // 盒子放大单边需要增加的宽度
-      closeBoxEnlargeWidth: opt.closeBoxWidth * opt.closeBoxEnlargeScale,
-      // 盒子放大单边需要增加的高度u
-      closeBoxEnlargeHeight: opt.closeBoxHeight * opt.closeBoxEnlargeScale,
-      // 图标组合时显示的盒子框
-      $closeBoxBackground: $('<img src="' + opt.closeBoxBackgroundImage + '" class="iconbox-bg" width="'
-        + opt.closeBoxWidth + '" height="' + opt.closeBoxHeight + '" style="display: none;">')
-    };
-    moveIconObj.$prevIconBelow = moveIconObj.$empty;
-    opt.moveIconObj = moveIconObj;
-
-    // 设置盒子内最多显示9个图标，第一个为checkbox，第二个为input，第三个为label，第四个为盒子背景
-    var otherThingNumInBox = 4;
-    opt.otherThingNumInBox = otherThingNumInBox;
-    var maxShowIconInBox = 8 + opt.otherThingNumInBox;
-    opt.maxShowIconInBox = maxShowIconInBox;
-
-    // 是否能够点击盒子，避免多次点击动画错乱
-    opt.ableClickBox = true;
-  }
-
-  /**
-   * 构造图标
-   * @param  {[type]} opt         [description]
-   * @param  {[type]} checkboxObj [description]
-   * @param  {[type]} dataIcon    [description]
-   * @param  {[type]} dataBox     [description]
-   * @return {[type]}             [description]
-   */
-  function constructIcon(opt, checkboxObj, dataIcon, dataBox) {
-    var $icon = $(document.createElement('a'));
-    $icon.addClass('iconbox-a');
-    if (!dataBox) {
-      $icon.addClass('icondesktopbox');
-    }
-    var $iconTitle = $(document.createElement('label'));
-    $iconTitle.addClass('iconbox-icontitle');
-    // 处理标题
-    handleOverMaxLengthText($iconTitle, dataIcon.title, opt.maxChineseCharLength, opt.ellipticalChars);
-    var $iconImg = $(document.createElement('img'));
-    $iconImg.addClass('iconbox-img');
-    $iconImg.attr('src', dataIcon.img);
-    if (dataIcon.extraClass) {
-      $iconImg.addClass(dataIcon.extraClass);
-    }
-    if (dataIcon.ableChecked) {
-      // 加上多选按钮
-      var $checkboxChildren = $('<a class="iconbox-checkbox iconbox-checkbox__children"></a>');
-      if (dataBox) {
-        $checkboxChildren.hide();
-      }
-      $icon.append($checkboxChildren);
-      bindCheckboxClick($checkboxChildren, dataIcon, dataBox);
-      // 如果是选中
-      if (dataIcon.checked) {
-        changeCheckboxFlagAndView($checkboxChildren, 2);
-        if (checkboxObj) {
-          checkboxObj.size++;
-        }
-      } else {
-        changeCheckboxFlagAndView($checkboxChildren, 0);
-      }
-    }
-    bindClick($icon, dataIcon, opt);
-    $icon.append($iconImg);
-    $icon.append($iconTitle);
-    if (opt.ableEditTitle) {
-      // 如果能够编辑标题，则加上单行文本框
-      var $iconTitleInput = $('<input type="text" class="iconbox-icontitleinput" value="' + dataIcon.title + '">');
-      $icon.append($iconTitleInput);
-      bindTitleClick($iconTitle, opt);
-      bindTitleInputClick($iconTitleInput, opt);
-    }
-    return $icon;
-  }
-
-  /**
-   * 创建盒子
-   * @param  {[type]} opt         [description]
-   * @param  {[type]} dataBox     [description]
-   * @return {[type]}             [description]
-   */
-  function constructBox(opt, dataBox) {
-    var $box = $(document.createElement('div'));
-    $box.addClass('iconbox iconbox__close icondesktopbox');
-    if (dataBox.extraClass) {
-      $box.addClass(dataBox.extraClass);
-    }
-    var $boxTitle = $(document.createElement('label'));
-    $boxTitle.addClass('iconbox-title');
-    // 处理标题
-    handleOverMaxLengthText($boxTitle, dataBox.title, opt.maxChineseCharLength, opt.ellipticalChars);
-    $box.append($boxTitle);
-    if (opt.ableEditTitle) {
-      // 如果能够编辑标题，则加上单行文本框
-      var $iconTitleInput = $('<input type="text" class="iconbox-icontitleinput iconbox-titleinput" value="' + dataBox.title + '">');
-      $box.append($iconTitleInput);
-    }
-    // 添加盒子背景
-    var $backgroundIcon = $('<img src="' + opt.closeBoxBackgroundImage + '" width="100%" height="100%" class="iconbox-bg">');
-    $box.append($backgroundIcon);
-    // 创建盒子内图标
-    var checkboxObj = {
-      size: 0
-    }
-    for (var j = 0; j < dataBox.children.length; j++) {
-      dataIcon = dataBox.children[j];
-      // 创建图标
-      var $icon = constructIcon(opt, checkboxObj, dataIcon, dataBox);
-      $box.append($icon);
-    }
-    
-    var $checkbox = $('<a class="iconbox-checkbox iconbox-checkbox__parent"></a>');
-    if (dataBox.ableChecked) {
-      // 盒子可以选中
-      bindCheckboxClick($checkbox, dataBox);
-      // checkboxObj.size只会小于等于dataBox.children.length
-      if (checkboxObj.size == dataBox.children.length) {
-        changeCheckboxFlagAndView($checkbox, 2);
-      } else if (checkboxObj.size > 0) {
-        changeCheckboxFlagAndView($checkbox, 1);
-      }
-    } else {
-      // 盒子不能选中
-      $checkbox.hide();
-    }
-    $box.prepend($checkbox);
-    return $box;
-  }
-
-  /**
-   * 初始化所有节点
-   * @param  {[type]} $root       [description]
-   * @param  {[type]} opt         [description]
-   * @return {[type]}             [description]
-   */
-  function initDoms($root, opt) {
-    var $dl = $(document.createElement('dl'));
-    $dl.addClass('icondesktop-slidebox');
-    var $pagePanel = $(document.createElement('div'));
-    $pagePanel.addClass('icondesktop-pagination');
-    var $pageBox = $(document.createElement('div'));
-    $pageBox.addClass('icondesktop-pagebox');
-    $pagePanel.append($pageBox);
-    for (var i = 0; i < opt.data.length; i++) {
-      var dataBox = opt.data[i];
-      // 下一页
-      if (i % opt.pageSize === 0) {
-        // 创建新桌面
-        var $dd = $(document.createElement('dd'));
-        $dd.addClass('icondesktop-slide');
-        $dl.append($dd);
-        // 创建页码图标
-        var $pageNum = $(document.createElement('a'));
-        $pageNum.addClass('icondesktop-pageitem');
-        if (i === 0) {
-          $pageNum.addClass('icondesktop-pageitem__active');
-        }
-        // $pageNum.text(Math.ceil(i / pageSize));
-        $pageBox.append($pageNum);
-      }
-      // 如果是盒子，则创建盒子；如果是图标，则创建图标
-      if (dataBox.img) {
-        // 是图标
-        dataIcon = dataBox;
-        // 创建图标
-        var $icon = constructIcon(opt, null, dataIcon);
-        $dd.append($icon);
-      } else {
-        // 是盒子，则创建盒子
-        var $box = constructBox(opt, dataBox);
-        $dd.append($box);
-      }
-    }
-    $root.append($dl);
-    $root.append($pagePanel);
-    $root.find('.icondesktop-slidebox').append(opt.moveIconObj.$closeBoxBackground);
-  }
-
-  /**
-   * 初始化所有样式
-   * @param  {[type]} $root [description]
-   * @param  {[type]} opt   [description]
-   * @return {[type]}       [description]
-   */
-  function initStyles($root, opt) {
-    // 设置各个桌面大小
-    $root.find('.icondesktop-slide').width(opt.width).height(opt.height);
-    // 设置分页栏高度
-    $root.find('.icondesktop-pagination').height(opt.pageHeight).css({
-      'bottom': '0px'
-    });
-    // 设置桌面背景颜色，用于还原的时候可恢复
-    $root.css({
-      'backgroundColor': opt.closeBoxColor
-    });
-    // 设置盒子及相关样式
-    setBoxStyle($root.find('.iconbox__close'), opt);
-    // 设置所有标题样式
-    setTitleStyle($root, opt);
-    // 设置桌面图标样式
-    $root.find('.iconbox-a.icondesktopbox').css({
-      'width': opt.closeBoxWidth + 'px',
-      'height': opt.closeBoxHeight + 'px'
-    });
-    // 设置盒子内最多显示9个图标，第一个为checkbox，第二个为input，第三个为label，第四个为盒子背景
-    $root.find('.iconbox__close .iconbox-a').each(function () {
-      // 此处index从0开始
-      if ($(this).index() > opt.maxShowIconInBox) {
-        $(this).hide();
-      }
-    });
-    
-    // 根据页数设置所有桌面的总长度
-    $root.find('.icondesktop-slidebox').width(opt.width * opt.pages);
-    // 盒子/图标定位
-    $root.find('.icondesktopbox').each(function (index, element) {
-      // 此处index从0开始
-      // 垂直序数，从0开始
-      var topIndex = Math.floor(index % opt.pageSize / opt.horSize);
-      // 水平序数，从0开始
-      var leftIndex = index % opt.horSize;
-      $(this).css({
-        top: topIndex * (opt.closeBoxHeight + opt.closeBoxMargin + opt.closeBoxTitleHeight) + opt.desktopPadding + 'px', 
-        left: leftIndex * (opt.closeBoxWidth + opt.closeBoxMargin) + opt.desktopPadding + 'px'
-      });
-    });
-  }
-
-  function setBoxStyle($box, opt) {
-    // 设置盒子样式
-    $box.css({
-      'padding': opt.closeBoxPadding,
-      'width': opt.closeBoxWidth - opt.closeBoxPadding * 2 + 'px',
-      'height': opt.closeBoxHeight - opt.closeBoxPadding * 2 + 'px'
-    });
-    // 设置盒子内小图标大小、外边距
-    $box.find('.iconbox-a').css({
-      'width': opt.thumbnailWidth + 'px', 
-      'height': opt.thumbnailHeight + 'px',
-      'margin': opt.verIconInCloseBoxMargin + 'px ' + opt.horIconInCloseBoxMargin + 'px'
-    });
-  }
-
-  function setTitleStyle($dom, opt) {
-    // 设置盒子标题样式
-    $dom.find('.iconbox-title,.iconbox-icontitle,.iconbox-icontitleinput').css({
-      'height': opt.closeBoxTitleHeight, 
-      'lineHeight': opt.closeBoxTitleHeight + 'px', 
-      'fontSize': opt.closeBoxTitleFontSize + 'px', 
-      'bottom': - opt.closeBoxTitleHeight + 'px',
-      'position': 'absolute'
-    });
-  }
 
   /** 翻页 **/
   // 设置初始为第一页
@@ -845,8 +808,7 @@
     }
   }
 
-  function moveIcon($this, opt, e) {
-    var moveIconObj = opt.moveIconObj;
+  function moveIcon($this, moveIconObj, opt, e) {
     // 图标处于在移动状态
     if ($this.attr('isMouseDownMove')) {
       moveIconObj.mouseDownIconCurrentPoint.x = e.pageX;
@@ -864,14 +826,14 @@
           moveIconObj.$iconBelow = $iconBelow;
           if (!$iconBelow) {
             // 如果此时不存在盒子/图标，说明没有在其他盒子/图标上，则恢复之前被遮挡的盒子/图标的状态，并显示指示位置图标
-            recoverIconBelow($this, opt);
+            recoverIconBelow($this, moveIconObj, opt);
             moveIconObj.$flagDom.show();
           } else if ($iconBelow.css('left') != moveIconObj.$prevIconBelow.css('left')
             || $iconBelow.css('top') != moveIconObj.$prevIconBelow.css('top')) {
             // console.log($iconBelow.css('left') + '---' + moveIconObj.$prevIconBelow.css('left'))
             // 如果当前被遮挡的盒子/图标与之前的不同，则说明进入了一个盒子/图标的范围，此时是通过前后图标的位置来确定的
             // 恢复状态，避免定时器间隔过长，间隔中发生过多变化，导致响应结果不正确
-            recoverIconBelow($this, opt, true);
+            recoverIconBelow($this, moveIconObj, opt, true);
             
             // 设置当前图标处于悬浮状态
             moveIconObj.isSuspended = true;
@@ -930,11 +892,11 @@
   /**
    * 取消移动
    * @param  {[type]} $this       [description]
+   * @param  {[type]} moveIconObj [description]
    * @param  {[type]} opt         [description]
    * @return {[type]}             [description]
    */
-  function cancelIconMove($this, opt) {
-    var moveIconObj = opt.moveIconObj;
+  function cancelIconMove($this, moveIconObj, opt) {
     // 是否鼠标按下
     if ($this.attr('isMouseDownIcon')) {
       $this.attr({
@@ -960,7 +922,7 @@
             var dstData = groupData(opt.data, getIconIndex($this), getIconIndex($iconBelow));
             groupDoms($this, $iconBelow, opt, dstData);
 
-            recoverIconBelow($this, opt);
+            recoverIconBelow($this, moveIconObj, opt);
           }
         } else {
           // 如果不是，则还原
@@ -997,7 +959,7 @@
               });
             });
           }
-          recoverIconBelow($this, opt, true);
+          recoverIconBelow($this, moveIconObj, opt, true);
         }
         moveIconObj.finishTime = new Date().getTime();
         if (moveIconObj.$flagDom) {
@@ -1018,13 +980,11 @@
 
   /**
    * 恢复下方盒子/图标的变大效果
-   * @param  {[type]} $this      [description]
-   * @param  {[type]} opt        [description]
-   * @param  {[type]} onlyEffect [description]
-   * @return {[type]}            [description]
+   * @param  {[type]} moveIconObj [description]
+   * @param  {[type]} opt         [description]
+   * @return {[type]}             [description]
    */
-  function recoverIconBelow($this, opt, onlyEffect) {
-    var moveIconObj = opt.moveIconObj;
+  function recoverIconBelow($this, moveIconObj, opt, onlyEffect) {
     // 隐藏悬浮在图标上时出现的盒子背景
     moveIconObj.$closeBoxBackground.hide();
     // 盒子背景还原
@@ -1198,29 +1158,61 @@
    * 合并节点，仅限于$this是图标，$iconBelow是盒子/图标
    * @param  {[type]} $this      被拖动的图标
    * @param  {[type]} $iconBelow 被遮挡的图标
-   * @param  {[type]} opt         [description]
-   * @param  {[type]} newData     [description]
-   * @return {[type]}             [description]
+   * @param  {[type]} opt        [description]
+   * @param  {[type]} newData    [description]
+   * @return {[type]}            [description]
    */
   function groupDoms($this, $iconBelow, opt, newData) {
     if ($iconBelow.hasClass('iconbox-a')) {
       // 在一个图标上，并且拖动物体不是盒子，则两个组合成一个盒子
-      var $newIconBox = constructBox(opt, newData);
-      setBoxStyle($newIconBox, opt);
-      setTitleStyle($newIconBox, opt);
-      $newIconBox.css({
-        'top': $iconBelow.css('top'),
-        'left': $iconBelow.css('left')
-      });
-      // 新盒子插入到目标节点之后
+      var $newIconBox = $('<div class="iconbox iconbox__close icondesktopbox" style="padding: '
+        + opt.closeBoxPadding + 'px; width: ' + (opt.closeBoxWidth - opt.closeBoxPadding * 2) + 'px; height: '
+        + (opt.closeBoxHeight - opt.closeBoxPadding * 2) + 'px; top: ' + $iconBelow.css('top') + '; left: '
+        + $iconBelow.css('left') + ';">');
+      // 多选按钮
+      var $checkbox = $('<a class="iconbox-checkbox iconbox-checkbox__parent"></a>');
+      bindCheckboxClick($checkbox, newData);
+      $newIconBox.append($checkbox);
+      // 分组标题
+      $newIconBox.append('<label class="iconbox-title" style="height: ' + opt.closeBoxTitleHeight + 'px; line-height: '
+        + opt.closeBoxTitleHeight + 'px; font-size: ' + opt.closeBoxTitleFontSize + 'px; bottom: -'
+        + opt.closeBoxTitleHeight + 'px; position: absolute;">新分组</label>');
+      // 分组背景
+      $newIconBox.append('<img src="' + opt.closeBoxBackgroundImage + '" class="iconbox-bg" width="100%" height="100%">');
       $newIconBox.insertAfter($iconBelow);
-      // 删除之前的两个图标
-      var $temp = $iconBelow;
-      $iconBelow = $newIconBox.children('.iconbox-a').eq(0);
-      $temp.remove();
-      $temp = $this;
-      $this = $newIconBox.children('.iconbox-a').eq(1);
-      $temp.remove();
+      // 如果有多选按钮，则加上多选按钮
+      if ($this.find('.iconbox-checkbox').is(':visible')) {
+        $checkbox.show();
+      } else {
+        $checkbox.hide();
+      }
+      // 改成小图标样式
+      $this.css({
+        'cursor': '',
+        'width': opt.thumbnailWidth + 'px',
+        'height': opt.thumbnailHeight + 'px',
+        'left': '',
+        'top': '',
+        'zIndex': '',
+        'margin': opt.verIconInCloseBoxMargin + 'px ' + opt.horIconInCloseBoxMargin + 'px',
+        'position': 'relative'
+      }).removeClass('icondesktopbox').find('.iconbox-checkbox').hide();
+      // 重新绑定多选框点击事件
+      bindCheckboxClick($this.children('.iconbox-checkbox'), newData.children[newData.children.length - 1], newData);
+      $iconBelow.css({
+        'cursor': '',
+        'width': opt.thumbnailWidth + 'px',
+        'height': opt.thumbnailHeight + 'px',
+        'left': '',
+        'top': '',
+        'zIndex': '',
+        'margin': opt.verIconInCloseBoxMargin + 'px ' + opt.horIconInCloseBoxMargin + 'px',
+        'position': 'relative'
+      }).removeClass('icondesktopbox').find('.iconbox-checkbox').hide();
+      // 重新绑定多选框点击事件
+      bindCheckboxClick($iconBelow.children('.iconbox-checkbox'), newData.children[0], newData);
+      $newIconBox.append($iconBelow);
+      $newIconBox.append($this);
     } else {
       // 在一个盒子上，则加入到盒子里
       // 改成小图标样式
@@ -1312,7 +1304,7 @@
   }
 
   /** 绑定图标的点击事件 **/
-  function bindClick($dom, data, opt) {
+  function bindClick($dom, data, opt, moveIconObj) {
     $dom.off().click(function (e) {
       // 当图标在盒子里时，需盒子打开时方可点击；图标不在盒子里时，可直接点击
       var $iconBox = $dom.parents('.iconbox');
@@ -1330,10 +1322,11 @@
         $dom.find('.iconbox-icontitleinput').focus().blur();
         // 避免拖动后自动打开图标
         var currentTime = new Date().getTime();
-        if (currentTime - opt.moveIconObj.finishTime > opt.moveIconObj.openPeriod) {
+        if (currentTime - moveIconObj.finishTime > moveIconObj.openPeriod) {
           opt.openBoxIconClick(data, e);
         }
       }
+      
     });
   }
 
