@@ -9,18 +9,23 @@
   <link rel="stylesheet" type="text/css" href="css/iconbox.css">
 </head>
 <body>
-  <div style="width: 800px; height: 528px;" class="icondesktop" id="icondesktop"></div>
+  <div style="width: 800px; height: 528px; margin: 0 auto;" class="icondesktop" id="icondesktop"></div>
   <input type="button" onclick="desktop.refreshIcon()" value="刷新">
   <input type="button" onclick="console.log(desktop.getData())" value="获得数据">
+  <input type="button" onclick="desktop.addIcons({title:'新图标',img:'img/email.png'})" value="新增图标">
   <script type="text/javascript">
     var desktop = $('#icondesktop').iconbox({
-      desktopVerticalPadding: 50,
-      desktopAutoFill: true,
-      closeBoxWidth: 128, 
+      // desktopVerticalPadding: 50,
+      // desktopAutoFill: true,
+      // closeBoxWidth: 128,
+      // thumbnailWidth: 30,
+      // ableEditTitle: true,
+      // closeBoxHorizontalMargin: 22,
+      // closeBoxVerticalMargin: 40,
+      // ableDel: true,
       thumbnailWidth: 30,
-      ableEditTitle: true,
-      closeBoxHorizontalMargin: 22,
-      closeBoxVerticalMargin: 40,
+      closeBoxWidth: 100,
+      thumbnailWidth: 23,
       openBoxIconClick: function (data, e) {
         console.log(desktop.getCheckedData());
       },
@@ -28,121 +33,101 @@
         {
           title: '图标就是1',
           extraClass: '',
-          ableChecked: true,
           img: 'img/email.png'
         },
         {
           title: '图标就是2',
           extraClass: '',
-          ableChecked: true,
           img: 'img/email.png'
         },
         {
           title: '图标就是3',
           extraClass: '',
-          ableChecked: true,
           img: 'img/email.png'
         },
         {
           title: '图标就是4',
           extraClass: '',
-          ableChecked: true,
           img: 'img/email.png'
         },
         {
           title: '图标就是5',
           extraClass: '',
-          ableChecked: true,
           img: 'img/email.png'
         },
         {
           title: '图标就是6',
           extraClass: '',
-          ableChecked: true,
           img: 'img/email.png'
         },
         {
           title: '图标1',
           extraClass: '',
-          ableChecked: true,
           children: [
             {
               title: '电子邮件可是到了附近的斯洛伐克',
               extraClass: 'rockicon',
-              ableChecked: true,
               // img: 'http://www.baidu.com/img/baidu_jgylogo3.gif'
               img: 'img/email.png'
             },
             {
               title: '电子邮件1234567',
               extraClass: 'rockicon',
-              ableChecked: true,
               img: 'img/email.png'
             },
             {
               title: '电子邮件123456',
               extraClass: 'rockicon',
-              ableChecked: true,
               img: 'img/email.png'
             },
             {
               title: '电子邮件12345',
               extraClass: 'rockicon',
-              ableChecked: true,
               img: 'img/email.png'
             },
             {
               title: '电子邮件1234',
               extraClass: 'rockicon',
-              ableChecked: true,
               img: 'img/email.png'
             },
             {
               title: '电子邮件',
               extraClass: 'rockicon',
-              ableChecked: true,
               img: 'img/email.png'
             },
             {
               title: '电子邮件',
               extraClass: 'rockicon',
-              ableChecked: true,
               img: 'img/email.png'
             },
             {
               title: '电子邮件',
               extraClass: 'rockicon',
-              ableChecked: true,
               img: 'img/email.png'
             },
             {
               title: '电子邮件',
               extraClass: 'rockicon',
-              ableChecked: true,
               img: 'img/email.png'
             },
             {
               title: '电子邮件',
               extraClass: 'rockicon',
-              ableChecked: true,
               img: 'img/email.png'
             },
             {
               title: '电子邮件',
               extraClass: 'rockicon',
-              ableChecked: true,
               img: 'img/email.png'
             },
             {
               title: '电子邮件',
               extraClass: 'rockicon',
-              ableChecked: true,
               img: 'img/email.png'
             },
             {
               title: '电子邮件',
               extraClass: 'rockicon',
-              ableChecked: true,
               img: 'img/email.png'
             }
           ]
@@ -150,26 +135,22 @@
         {
           title: '图标2',
           extraClass: '',
-          ableChecked: true,
           children: [
             {
               title: '新闻',
               extraClass: 'rockicon',
-              ableChecked: true,
               checked: 2,
               img: 'img/news.png'
             },
             {
               title: '新闻',
               extraClass: 'rockicon',
-              ableChecked: true,
               checked: 2,
               img: 'img/news.png'
             },
             {
               title: '新闻',
               extraClass: 'rockicon',
-              ableChecked: true,
               checked: 2,
               img: 'img/news.png'
             }
@@ -178,25 +159,21 @@
         {
           title: '图标3',
           extraClass: '',
-          ableChecked: true,
           children: [
             {
               title: '通知',
               extraClass: 'rockicon',
-              ableChecked: true,
               checked: 2,
               img: 'img/notify.png'
             },
             {
               title: '通知',
               extraClass: 'rockicon',
-              ableChecked: true,
               img: 'img/notify.png'
             },
             {
               title: '通知',
               extraClass: 'rockicon',
-              ableChecked: true,
               img: 'img/notify.png'
             }
           ]
@@ -204,13 +181,418 @@
         {
           title: '图标4',
           extraClass: '',
-          ableChecked: true,
           img: 'img/email.png'
         },
         {
           title: '图标5',
           extraClass: '',
-          ableChecked: true,
+          img: 'img/email.png'
+        },
+        {
+          title: '图标6',
+          extraClass: '',
+          children: [
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            },
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            },
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            }
+          ]
+        },
+        {
+          title: '图标7',
+          extraClass: '',
+          children: [
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            },
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            },
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            }
+          ]
+        },
+        {
+          title: '图标8',
+          extraClass: '',
+          children: [
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            },
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            },
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            }
+          ]
+        },
+        {
+          title: '图标9',
+          extraClass: '',
+          children: [
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            },
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            },
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            }
+          ]
+        },
+        {
+          title: '图标10',
+          extraClass: '',
+          children: [
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            },
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            },
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            }
+          ]
+        },
+        {
+          title: '图标11',
+          extraClass: '',
+          children: [
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            },
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            },
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            }
+          ]
+        },
+        {
+          title: '图标12',
+          extraClass: '',
+          children: [
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            },
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            },
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            }
+          ]
+        },
+        {
+          title: '图标13',
+          extraClass: '',
+          children: [
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            },
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            },
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            }
+          ]
+        },
+        {
+          title: '图标14',
+          extraClass: '',
+          children: [
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            },
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            },
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            }
+          ]
+        },
+        {
+          title: '图标15',
+          extraClass: '',
+          children: [
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            },
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            },
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            }
+          ]
+        },
+        {
+          title: '图标16',
+          extraClass: '',
+          children: [
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            },
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            },
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            }
+          ]
+        }
+      ]
+    });
+    desktop = $('#icondesktop').iconbox({
+      // desktopVerticalPadding: 50,
+      // desktopAutoFill: true,
+      // closeBoxWidth: 128,
+      // thumbnailWidth: 30,
+      // ableEditTitle: true,
+      // closeBoxHorizontalMargin: 22,
+      // closeBoxVerticalMargin: 40,
+      // ableDel: true,
+      thumbnailWidth: 30,
+      closeBoxWidth: 100,
+      thumbnailWidth: 23,
+      openBoxIconClick: function (data, e) {
+        console.log(desktop.getCheckedData());
+      },
+      data: [
+        {
+          title: '图标就是1',
+          extraClass: '',
+          img: 'img/email.png'
+        },
+        {
+          title: '图标就是2',
+          extraClass: '',
+          img: 'img/email.png'
+        },
+        {
+          title: '图标就是3',
+          extraClass: '',
+          img: 'img/email.png'
+        },
+        {
+          title: '图标就是4',
+          extraClass: '',
+          img: 'img/email.png'
+        },
+        {
+          title: '图标就是5',
+          extraClass: '',
+          img: 'img/email.png'
+        },
+        {
+          title: '图标就是6',
+          extraClass: '',
+          img: 'img/email.png'
+        },
+        {
+          title: '图标1',
+          extraClass: '',
+          children: [
+            {
+              title: '电子邮件可是到了附近的斯洛伐克',
+              extraClass: 'rockicon',
+              // img: 'http://www.baidu.com/img/baidu_jgylogo3.gif'
+              img: 'img/email.png'
+            },
+            {
+              title: '电子邮件1234567',
+              extraClass: 'rockicon',
+              img: 'img/email.png'
+            },
+            {
+              title: '电子邮件123456',
+              extraClass: 'rockicon',
+              img: 'img/email.png'
+            },
+            {
+              title: '电子邮件12345',
+              extraClass: 'rockicon',
+              img: 'img/email.png'
+            },
+            {
+              title: '电子邮件1234',
+              extraClass: 'rockicon',
+              img: 'img/email.png'
+            },
+            {
+              title: '电子邮件',
+              extraClass: 'rockicon',
+              img: 'img/email.png'
+            },
+            {
+              title: '电子邮件',
+              extraClass: 'rockicon',
+              img: 'img/email.png'
+            },
+            {
+              title: '电子邮件',
+              extraClass: 'rockicon',
+              img: 'img/email.png'
+            },
+            {
+              title: '电子邮件',
+              extraClass: 'rockicon',
+              img: 'img/email.png'
+            },
+            {
+              title: '电子邮件',
+              extraClass: 'rockicon',
+              img: 'img/email.png'
+            },
+            {
+              title: '电子邮件',
+              extraClass: 'rockicon',
+              img: 'img/email.png'
+            },
+            {
+              title: '电子邮件',
+              extraClass: 'rockicon',
+              img: 'img/email.png'
+            },
+            {
+              title: '电子邮件',
+              extraClass: 'rockicon',
+              img: 'img/email.png'
+            }
+          ]
+        },
+        {
+          title: '图标2',
+          extraClass: '',
+          children: [
+            {
+              title: '新闻',
+              extraClass: 'rockicon',
+              checked: 2,
+              img: 'img/news.png'
+            },
+            {
+              title: '新闻',
+              extraClass: 'rockicon',
+              checked: 2,
+              img: 'img/news.png'
+            },
+            {
+              title: '新闻',
+              extraClass: 'rockicon',
+              checked: 2,
+              img: 'img/news.png'
+            }
+          ]
+        },
+        {
+          title: '图标3',
+          extraClass: '',
+          children: [
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              checked: 2,
+              img: 'img/notify.png'
+            },
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            },
+            {
+              title: '通知',
+              extraClass: 'rockicon',
+              img: 'img/notify.png'
+            }
+          ]
+        },
+        {
+          title: '图标4',
+          extraClass: '',
+          img: 'img/email.png'
+        },
+        {
+          title: '图标5',
+          extraClass: '',
           img: 'img/email.png'
         },
         {

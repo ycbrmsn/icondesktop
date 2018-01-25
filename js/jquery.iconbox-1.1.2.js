@@ -1,7 +1,7 @@
 /**
  * 模拟手机桌面
  * @auther jzw
- * @version 1.0.2
+ * @version 1.1.2
  * @history
  *   1.0.0 完成基本功能
  *   1.0.2 加上盒子多选功能
