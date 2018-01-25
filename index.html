@@ -9,12 +9,18 @@
   <link rel="stylesheet" type="text/css" href="css/iconbox.css">
 </head>
 <body>
-  <div style="width: 800px; height: 628px;" class="icondesktop" id="icondesktop"></div>
+  <div style="width: 800px; height: 528px;" class="icondesktop" id="icondesktop"></div>
+  <input type="button" onclick="desktop.refreshIcon()" value="刷新">
+  <input type="button" onclick="console.log(desktop.getData())" value="获得数据">
   <script type="text/javascript">
     var desktop = $('#icondesktop').iconbox({
+      desktopVerticalPadding: 50,
+      desktopAutoFill: true,
       closeBoxWidth: 128, 
       thumbnailWidth: 30,
       ableEditTitle: true,
+      closeBoxHorizontalMargin: 22,
+      closeBoxVerticalMargin: 40,
       openBoxIconClick: function (data, e) {
         console.log(desktop.getCheckedData());
       },
@@ -38,25 +44,25 @@
           img: 'img/email.png'
         },
         {
-          title: '图标就是这么多1',
+          title: '图标就是4',
           extraClass: '',
           ableChecked: true,
           img: 'img/email.png'
         },
         {
-          title: '图标就是这么多1',
+          title: '图标就是5',
           extraClass: '',
           ableChecked: true,
           img: 'img/email.png'
         },
         {
-          title: '图标就是这么多1',
+          title: '图标就是6',
           extraClass: '',
           ableChecked: true,
           img: 'img/email.png'
         },
         {
-          title: '图标就是这么多1',
+          title: '图标1',
           extraClass: '',
           ableChecked: true,
           children: [
@@ -196,58 +202,16 @@
           ]
         },
         {
-          title: '图标就是这么多1',
-          extraClass: '',
-          ableChecked: true,
-          img: 'img/email.png'
-        },
-        {
-          title: '图标就是这么多1',
-          extraClass: '',
-          ableChecked: true,
-          img: 'img/email.png'
-        },
-        {
           title: '图标4',
           extraClass: '',
-          children: [
-            {
-              title: '通知',
-              extraClass: 'rockicon',
-              img: 'img/notify.png'
-            },
-            {
-              title: '通知',
-              extraClass: 'rockicon',
-              img: 'img/notify.png'
-            },
-            {
-              title: '通知',
-              extraClass: 'rockicon',
-              img: 'img/notify.png'
-            }
-          ]
+          ableChecked: true,
+          img: 'img/email.png'
         },
         {
           title: '图标5',
           extraClass: '',
-          children: [
-            {
-              title: '通知',
-              extraClass: 'rockicon',
-              img: 'img/notify.png'
-            },
-            {
-              title: '通知',
-              extraClass: 'rockicon',
-              img: 'img/notify.png'
-            },
-            {
-              title: '通知',
-              extraClass: 'rockicon',
-              img: 'img/notify.png'
-            }
-          ]
+          ableChecked: true,
+          img: 'img/email.png'
         },
         {
           title: '图标6',
@@ -479,11 +443,6 @@
               img: 'img/notify.png'
             }
           ]
-        },
-        {
-          title: '图标16',
-          extraClass: '',
-          img: 'img/notify.png'
         }
       ]
     });

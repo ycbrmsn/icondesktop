@@ -13,7 +13,6 @@
  *   1.1.3 重构代码
  *   1.1.4 拖动盒子互换功能加上提示
  *   1.1.6 桌面图标刷新（自动排列补齐）功能
- *   1.1.8 加上桌面水平内边距与垂直内边距、图标水平间距与垂直间距四个配置选项
  */
 ;(function (factory) {
   if (typeof define === "function" && define.amd) {
@@ -27,9 +26,6 @@
   $.fn.iconbox = function (options) {
     var defaultOption = {
       desktopPadding: 20, // 桌面内边距
-      desktopHorizontalPadding: 0, // 桌面水平方向内边距，为0时与desktopPadding相同
-      desktopVerticalPadding: 0, // 桌面垂直方向内边距，为0时与desktopPadding相同
-      desktopAutoFill: false, // 组合/移动图标出现空缺后，桌面是否自动填满
       pageHeight: 50, // 分页栏高度
       closeBoxColor: '#8e8e8e', // 桌面背景颜色
       closeBoxBackgroundImage: 'img/iconbox.png', // 盒子的背景图片
@@ -37,8 +33,6 @@
       closeBoxHeight: 0, // 盒子关闭时的高度，为0时与宽度相同
       closeBoxPadding: 10, // 盒子关闭时的内边距
       closeBoxMargin: 20, // 盒子关闭时的外边距
-      closeBoxHorizontalMargin: 0, // 盒子关闭时水平方向上的外边距，为0时与closeBoxMargin相同
-      closeBoxVerticalMargin: 0, // 盒子关闭时垂直方向上的外边距，为0时与closeBoxMargin相同
       closeBoxEnlargeScale: 0.05, // 盒子关闭时的放大比例
       closeBoxTitleHeight: 30, // 盒子关闭时的标题高度
       closeBoxTitleFontSize: 14, // 盒子关闭时的标题字体大小
@@ -83,29 +77,12 @@
       ]
     }
     var opt = $.extend(defaultOption, options);
-    // 桌面水平方向内边距，为0时与desktopPadding相同
-    if (!opt.desktopHorizontalPadding) {
-      opt.desktopHorizontalPadding = opt.desktopPadding;
-    }
-    // 桌面垂直方向内边距，为0时与desktopPadding相同
-    if (!opt.desktopVerticalPadding) {
-      opt.desktopVerticalPadding = opt.desktopPadding;
-    }
     // 如果未设置高度，则与宽度相同
     if (!opt.closeBoxHeight) {
       opt.closeBoxHeight = opt.closeBoxWidth;
     }
-    // 盒子内小图标高度为0时，与盒子内小图标宽度相同
     if (!opt.thumbnailHeight) {
-      opt.thumbnailHeight = opt.thumbnailWidth;
-    }
-    // 盒子关闭时水平间距为0时，与closeBoxMargin相同
-    if (!opt.closeBoxHorizontalMargin) {
-      opt.closeBoxHorizontalMargin = opt.closeBoxMargin;
-    }
-    // 盒子关闭时垂直间距为0时，与closeBoxMargin相同
-    if (!opt.closeBoxVerticalMargin) {
-      opt.closeBoxVerticalMargin = opt.closeBoxMargin;
+      opt.thumbnailHeight = opt.thumbnailWidth
     }
     this.each(function () {
       // *******************************初始化状态开始*************************************
@@ -462,9 +439,14 @@
         var allData = jQuery.extend(true, {}, opt.data);
         return allData;
       },
-      // 桌面图标自动补齐刷新
+      // 桌面图标自动排列
       refreshIcon: function () {
-        refreshIcon($root, opt);
+        // 初始化数据
+        initData($root, opt);
+        // 初始化所有节点
+        initDoms($root, opt);
+        // 初始化所有样式
+        initStyles($root, opt);
       }
     }
   };
@@ -476,16 +458,17 @@
    * @return {[type]}       [description]
    */
   function initData($root, opt) {
+    console.log($root)
     var width = $root.width();
     var height = $root.height();
     opt.width = width;
     opt.height = height;
     // 计算水平可以放几个盒子
-    // (桌面宽度 - 桌面左右的内边距 + 图标之间的水平外边距) / (图标的宽度 + 图标的水平外边距)
-    var horSize = Math.floor((width - opt.desktopHorizontalPadding * 2 + opt.closeBoxHorizontalMargin) / (opt.closeBoxWidth + opt.closeBoxHorizontalMargin));
+    // (桌面宽度 - 桌面上下的内边距 + 图标之间的外边距) / (图标的宽度 + 图标的外边距)
+    var horSize = Math.floor((width - opt.desktopPadding * 2 + opt.closeBoxMargin) / (opt.closeBoxWidth + opt.closeBoxMargin));
     // 计算垂直方向可以放几个盒子
-    // (桌面高度 - 分页栏高度 - 上边桌面的内边距 + 图标之间的垂直外边距) / (图标高度 + 图标名称 + 图标垂直外边距)
-    var verSize = Math.floor((height - opt.pageHeight - opt.desktopVerticalPadding + opt.closeBoxVerticalMargin) / (opt.closeBoxHeight + opt.closeBoxTitleHeight + opt.closeBoxVerticalMargin));
+    // (桌面高度 - 分页栏高度 - 上边桌面的内边距 + 图标之间的外边距) / (图标高度 + 图标名称 + 图标外边距)
+    var verSize = Math.floor((height - opt.pageHeight - opt.desktopPadding + opt.closeBoxMargin) / (opt.closeBoxHeight + opt.closeBoxTitleHeight + opt.closeBoxMargin));
     // 一页的盒子数量
     var pageSize = horSize * verSize;
     // 页数
@@ -742,8 +725,8 @@
       // 水平序数，从0开始
       var leftIndex = index % opt.horSize;
       $(this).css({
-        top: topIndex * (opt.closeBoxHeight + opt.closeBoxVerticalMargin + opt.closeBoxTitleHeight) + opt.desktopVerticalPadding + 'px', 
-        left: leftIndex * (opt.closeBoxWidth + opt.closeBoxHorizontalMargin) + opt.desktopHorizontalPadding + 'px'
+        top: topIndex * (opt.closeBoxHeight + opt.closeBoxMargin + opt.closeBoxTitleHeight) + opt.desktopPadding + 'px', 
+        left: leftIndex * (opt.closeBoxWidth + opt.closeBoxMargin) + opt.desktopPadding + 'px'
       });
     });
   }
@@ -1008,7 +991,6 @@
           'isMouseDownMove': ''
         });
         // 判断是否处于特定位置特定状态
-        var moveFlag = 0;
         // 如果是，则作特殊变换
         var $iconBelow = moveIconObj.$iconBelow;
         if (moveIconObj.isSuspended && $iconBelow) {
@@ -1017,16 +999,12 @@
             // 如果被拖动物体是一个盒子，则交换位置
             exchangeData(opt.data, getIconIndex($this), getIconIndex($iconBelow));
             exchangeDoms($this, $iconBelow, opt);
-            moveFlag = 1;
           } else {
             // 如果被拖动物体是一个图标，则进行分组
             var dstData = groupData(opt.data, getIconIndex($this), getIconIndex($iconBelow));
-            // 此处$this与$iconBelow被删除重新创建，所以重新赋值
-            $groupObj = groupDoms($this, $iconBelow, opt, dstData);
-            $this = $groupObj.$this;
-            $iconBelow = $groupObj.$iconBelow;
+            groupDoms($this, $iconBelow, opt, dstData);
+
             recoverIconBelow($this, opt);
-            moveFlag = 2;
           }
         } else {
           // 如果不是，则还原
@@ -1080,9 +1058,6 @@
 
           moveIconObj.$prevIconBelow = moveIconObj.$empty;
           moveIconObj.isSuspended = false;
-        }
-        if (opt.desktopAutoFill && moveFlag) {
-          refreshIcon($this.parents('.icondesktop'), opt);
         }
       }
     }
@@ -1277,9 +1252,9 @@
    * 合并节点，仅限于$this是图标，$iconBelow是盒子/图标
    * @param  {[type]} $this      被拖动的图标
    * @param  {[type]} $iconBelow 被遮挡的图标
-   * @param  {[type]} opt        [description]
-   * @param  {[type]} newData    [description]
-   * @return {[type]}            {$this, $iconBelow}
+   * @param  {[type]} opt         [description]
+   * @param  {[type]} newData     [description]
+   * @return {[type]}             [description]
    */
   function groupDoms($this, $iconBelow, opt, newData) {
     if ($iconBelow.hasClass('iconbox-a')) {
@@ -1320,10 +1295,6 @@
       if ($this.index() > 8 + opt.otherThingNumInBox) {
         $this.hide();
       }
-    }
-    return {
-      $this: $this,
-      $iconBelow: $iconBelow
     }
   }
 
@@ -1373,21 +1344,6 @@
         'prevTop': $(this).css('top')
       });
     });
-  }
-
-  /**
-   * 桌面图标自动补齐刷新
-   * @param  {[type]} $root [description]
-   * @param  {[type]} opt   [description]
-   * @return {[type]}       [description]
-   */
-  function refreshIcon($root, opt) {
-    // 初始化数据
-    initData($root, opt);
-    // 初始化所有节点
-    initDoms($root, opt);
-    // 初始化所有样式
-    initStyles($root, opt);
   }
 
   // 点击图标标题可编辑，写在这里主要用于阻止冒泡
