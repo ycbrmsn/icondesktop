@@ -1,7 +1,7 @@
 /**
  * 模拟手机桌面
  * @auther jzw
- * @version 1.4.1
+ * @version 1.4.0
  * @history
  *   1.0.0 完成基本功能
  *   1.0.2 加上盒子多选功能
@@ -22,8 +22,6 @@
  *   1.3.1 修改标题不可修改时盒子里的图标溢出的问题
  *   1.3.2 修改重复加载事件重复绑定的问题
  *   1.4.0 新增图标角标
- *   1.4.1 修改1.3.2版本出现的图标不能拖拽等问题
- *   1.4.2 修改拖动组合图标后角标未更新的问题
  */
 ;(function (factory) {
   if (typeof define === "function" && define.amd) {
@@ -119,37 +117,6 @@
     this.each(function () {
       // 初始化数据
       init($(this), opt);
-
-      // 点击翻页
-      $(this).off('click', '.icondesktop-pageitem').on('click', '.icondesktop-pageitem', function () {
-        // index从0开始
-        var pageIndex = $(this).index();
-        turnPage($(this).parents('.icondesktop'), pageIndex, opt.width, opt.pages);
-      })
-
-      // 滑动翻页
-      var mousedownX;
-      var isMouseDown = false;
-      var minDistance = 100;
-      $(this).off('mousedown').on('mousedown', function (e) {
-        isMouseDown = true;
-        mousedownX = e.pageX;
-      });
-      $(this).off('mousemove').on('mousemove', function (e) {
-        var currentX = e.pageX;
-        if (isMouseDown) {
-          if (currentX - mousedownX > minDistance) { // 有效右滑，上一页
-            turnPage($(this), currentPageIndex - 1, opt.width, opt.pages);
-            isMouseDown = false;
-          } else if (currentX - mousedownX < - minDistance) { // 有效左滑，下一页
-            turnPage($(this), currentPageIndex + 1, opt.width, opt.pages);
-            isMouseDown = false;
-          }
-        }
-      });
-      $(this).off('mouseup').on('mouseup', function () {
-        isMouseDown = false;
-      });
 
       // 打开/关闭盒子
       $(this).off('click', '.iconbox').on('click', '.iconbox', function () {
@@ -293,7 +260,7 @@
             });
           });
           // 缩略图缩小
-          // console.log(opt.verIconInCloseBoxMargin + 'px ' + opt.horIconInCloseBoxMargin + 'px')
+          console.log(opt.verIconInCloseBoxMargin + 'px ' + opt.horIconInCloseBoxMargin + 'px')
           $this.find('.iconbox-a').animate({
             'width': opt.thumbnailWidth + 'px',
             'height': opt.thumbnailHeight + 'px',
@@ -437,12 +404,46 @@
         // 取消盒子/图标移动
         cancelIconMove($this, opt);
       });
+      $(this).off('mouseenter', '.icondesktopbox').on('mouseenter', '.icondesktopbox', function (e) {
+        
+      });
       $(this).off('mouseleave', '.icondesktopbox').on('mouseleave', '.icondesktopbox', function (e) {
         e.preventDefault();
         e.stopPropagation();
         var $this = $(this);
         // 取消盒子/图标移动
         cancelIconMove($this, opt);
+      });
+
+      // 点击翻页
+      $(this).off('click', '.icondesktop-pageitem').on('click', '.icondesktop-pageitem', function () {
+        // index从0开始
+        var pageIndex = $(this).index();
+        turnPage($(this).parents('.icondesktop'), pageIndex, opt.width, opt.pages);
+      })
+
+      // 滑动翻页
+      var mousedownX;
+      var isMouseDown = false;
+      var minDistance = 100;
+      $(this).off('mousedown').on('mousedown', function (e) {
+        isMouseDown = true;
+        mousedownX = e.pageX;
+      });
+      $(this).off('mousemove').on('mousemove', function (e) {
+        var currentX = e.pageX;
+        if (isMouseDown) {
+          if (currentX - mousedownX > minDistance) { // 有效右滑，上一页
+            turnPage($(this), currentPageIndex - 1, opt.width, opt.pages);
+            isMouseDown = false;
+          } else if (currentX - mousedownX < - minDistance) { // 有效左滑，下一页
+            turnPage($(this), currentPageIndex + 1, opt.width, opt.pages);
+            isMouseDown = false;
+          }
+        }
+      });
+      $(this).off('mouseup').on('mouseup', function () {
+        isMouseDown = false;
       });
     });
     var $root = $(this);
@@ -1406,8 +1407,6 @@
       if ($this.index() > 8 + opt.otherThingNumInBox) {
         $this.hide();
       }
-      // 更新盒子的角标
-      updateBoxSuperscript($iconBelow, opt);
     }
     return {
       $this: $this,

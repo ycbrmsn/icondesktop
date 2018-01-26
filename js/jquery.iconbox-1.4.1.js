@@ -23,7 +23,6 @@
  *   1.3.2 修改重复加载事件重复绑定的问题
  *   1.4.0 新增图标角标
  *   1.4.1 修改1.3.2版本出现的图标不能拖拽等问题
- *   1.4.2 修改拖动组合图标后角标未更新的问题
  */
 ;(function (factory) {
   if (typeof define === "function" && define.amd) {
@@ -1406,8 +1405,6 @@
       if ($this.index() > 8 + opt.otherThingNumInBox) {
         $this.hide();
       }
-      // 更新盒子的角标
-      updateBoxSuperscript($iconBelow, opt);
     }
     return {
       $this: $this,
