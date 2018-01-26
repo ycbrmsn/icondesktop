@@ -1,7 +1,7 @@
 /**
  * 模拟手机桌面
  * @auther jzw
- * @version 1.4.1
+ * @version 1.4.3
  * @history
  *   1.0.0 完成基本功能
  *   1.0.2 加上盒子多选功能
@@ -24,6 +24,7 @@
  *   1.4.0 新增图标角标
  *   1.4.1 修改1.3.2版本出现的图标不能拖拽等问题
  *   1.4.2 修改拖动组合图标后角标未更新的问题
+ *   1.4.3 支持拖动功能可选配置，默认为可拖动
  */
 ;(function (factory) {
   if (typeof define === "function" && define.amd) {
@@ -64,6 +65,7 @@
       ableEditTitle: false, // 标题是否可以修改
       ableChecked: false, // 图标是否可以多选
       ableDel: false, // 图标是否可以删除
+      ableDrag: true, // 图标是否可以拖动
       openBoxIconClick: function (data) {}, // 盒子打开时里面的图标点击事件
       data: [
         {
@@ -366,8 +368,8 @@
         e.preventDefault();
         e.stopPropagation();
         var $this = $(this);
-        // 非打开状态按下
-        if (!$this.hasClass('iconbox__open')) {
+        // 非打开状态按下，并且可以拖动
+        if (!$this.hasClass('iconbox__open') && opt.ableDrag) {
           $this.attr({
             'isMouseDownIcon': true
           });
@@ -427,22 +429,28 @@
         e.preventDefault();
         e.stopPropagation();
         var $this = $(this);
+        if (opt.ableDrag) {
         // 移动盒子/图标
-        moveIcon($this, opt, e);
+          moveIcon($this, opt, e);
+        }
       });
       $(this).off('mouseup', '.icondesktopbox').on('mouseup', '.icondesktopbox', function (e) {
         e.preventDefault();
         e.stopPropagation();
         var $this = $(this);
-        // 取消盒子/图标移动
-        cancelIconMove($this, opt);
+        if (opt.ableDrag) {
+          // 取消盒子/图标移动
+          cancelIconMove($this, opt);
+        }
       });
       $(this).off('mouseleave', '.icondesktopbox').on('mouseleave', '.icondesktopbox', function (e) {
         e.preventDefault();
         e.stopPropagation();
         var $this = $(this);
-        // 取消盒子/图标移动
-        cancelIconMove($this, opt);
+        if (opt.ableDrag) {
+          // 取消盒子/图标移动
+          cancelIconMove($this, opt);
+        }
       });
     });
     var $root = $(this);

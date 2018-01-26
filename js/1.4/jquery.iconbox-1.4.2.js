@@ -1,7 +1,7 @@
 /**
  * 模拟手机桌面
  * @auther jzw
- * @version 1.5.0
+ * @version 1.4.2
  * @history
  *   1.0.0 完成基本功能
  *   1.0.2 加上盒子多选功能
@@ -24,10 +24,6 @@
  *   1.4.0 新增图标角标
  *   1.4.1 修改1.3.2版本出现的图标不能拖拽等问题
  *   1.4.2 修改拖动组合图标后角标未更新的问题
- *   1.4.3 支持拖动功能可选配置，默认为可拖动
- *   1.4.4 修改在盒子中新增图标带上0角标的问题
- *   1.4.5 让角标在删除按钮之下,删除按钮在多选按钮之下
- *   1.5.0 增加切换状态功能
  */
 ;(function (factory) {
   if (typeof define === "function" && define.amd) {
@@ -68,7 +64,6 @@
       ableEditTitle: false, // 标题是否可以修改
       ableChecked: false, // 图标是否可以多选
       ableDel: false, // 图标是否可以删除
-      ableDrag: true, // 图标是否可以拖动
       openBoxIconClick: function (data) {}, // 盒子打开时里面的图标点击事件
       data: [
         {
@@ -177,24 +172,18 @@
           opt.openBox.left = $this.css('left');
           opt.openBox.$box = $this;
           $this.css('zIndex', 5);
-          if (opt.ableChecked) {
-            // 隐藏盒子多选按钮
-            $this.find('.iconbox-checkbox__parent').hide();
-          }
-          if (opt.ableDel) {
-            // 隐藏盒子删除按钮
-            $this.find('.iconbox-delbtn__parent').hide();
-          }
+          // 隐藏盒子多选按钮
+          $this.find('.iconbox-checkbox__parent').hide();
+          // 隐藏盒子删除按钮
+          $this.find('.iconbox-delbtn__parent').hide();
           // 隐藏盒子角标
           $this.find('.iconbox-superscript__parent').hide();
           // 隐藏盒子背景图片
           $this.find('.iconbox-bg').hide();
-          if (opt.ableEditTitle) {
-            // 触发更新标题事件
-            $this.find('.iconbox-icontitleinput:visible').focus().blur();
-            // 隐藏标题编辑输入框
-            $this.find('.iconbox-icontitleinput').hide();
-          }
+          // 隐藏盒子内标题编辑框
+          $this.find('.iconbox-icontitleinput:visible').focus().blur();
+          // 隐藏标题编辑输入框
+          $this.find('.iconbox-icontitleinput').hide();
           // 盒子标题超长时不省略
           var $boxTitle = $this.find('.iconbox-title');
           var boxTitle = $boxTitle.attr('title');
@@ -211,14 +200,10 @@
             'padding': opt.openBoxPadding
           }, function () {
             opt.ableClickBox = true;
-            if (opt.ableChecked) {
-              // 显示图标多选按钮
-              $this.find('.iconbox-checkbox__children').show();
-            }
-            if (opt.ableDel) {
-              // 显示图标删除按钮
-              $this.find('.iconbox-delbtn__children').show();
-            }
+            // 显示图标多选按钮
+            $this.find('.iconbox-checkbox__children').show();
+            // 显示图标删除按钮
+            $this.find('.iconbox-delbtn__children').show();
             // 更新图标角标
             updateIconInBoxSuperscript($this, opt);
             // 显示盒子内图标标题
@@ -245,20 +230,14 @@
           // ***************************** 以下为关闭盒子操作 ******************************
           opt.openBox.$box = null;
           $this.removeClass('iconbox__open').addClass('iconbox__close');
-          if (opt.ableChecked) {
-            // 隐藏图标多选按钮
-            $this.find('.iconbox-checkbox__children').hide();
-          }
-          if (opt.ableDel) {
-            // 隐藏图标删除按钮
-            $this.find('.iconbox-delbtn__children').hide();
-          }
+          // 隐藏图标多选按钮
+          $this.find('.iconbox-checkbox__children').hide();
+          // 隐藏图标删除按钮
+          $this.find('.iconbox-delbtn__children').hide();
           // 隐藏图标角标
           $this.find('.iconbox-superscript__children').hide();
-          if (opt.ableEditTitle) {
-            // 隐藏盒子内标题编辑框
-            $this.find('.iconbox-icontitleinput:visible').focus().blur();
-          }
+          // 隐藏盒子内标题编辑框
+          $this.find('.iconbox-icontitleinput:visible').focus().blur();
           // 隐藏盒子内图标标题
           $this.find('.iconbox-icontitle').hide();
           // 盒子缩小
@@ -387,8 +366,8 @@
         e.preventDefault();
         e.stopPropagation();
         var $this = $(this);
-        // 非打开状态按下，并且可以拖动
-        if (!$this.hasClass('iconbox__open') && opt.ableDrag) {
+        // 非打开状态按下
+        if (!$this.hasClass('iconbox__open')) {
           $this.attr({
             'isMouseDownIcon': true
           });
@@ -448,28 +427,22 @@
         e.preventDefault();
         e.stopPropagation();
         var $this = $(this);
-        if (opt.ableDrag) {
         // 移动盒子/图标
-          moveIcon($this, opt, e);
-        }
+        moveIcon($this, opt, e);
       });
       $(this).off('mouseup', '.icondesktopbox').on('mouseup', '.icondesktopbox', function (e) {
         e.preventDefault();
         e.stopPropagation();
         var $this = $(this);
-        if (opt.ableDrag) {
-          // 取消盒子/图标移动
-          cancelIconMove($this, opt);
-        }
+        // 取消盒子/图标移动
+        cancelIconMove($this, opt);
       });
       $(this).off('mouseleave', '.icondesktopbox').on('mouseleave', '.icondesktopbox', function (e) {
         e.preventDefault();
         e.stopPropagation();
         var $this = $(this);
-        if (opt.ableDrag) {
-          // 取消盒子/图标移动
-          cancelIconMove($this, opt);
-        }
+        // 取消盒子/图标移动
+        cancelIconMove($this, opt);
       });
     });
     var $root = $(this);
@@ -522,26 +495,6 @@
        */
       addIcons: function (data, isOnDesktop) {
         addIcons($root, opt, data, isOnDesktop);
-      },
-      /**
-       * 切换状态功能
-       * @param  {[type]} option {ableEditTitle, ableChecked, ableDel, ableDrag}
-       * @return {[type]}        [description]
-       */
-      switchState: function (stateName) {
-        if (typeof opt[stateName] != 'undefined') {
-          opt[stateName] = !opt[stateName];
-        }
-        if (stateName == 'ableEditTitle') {
-          if (!opt[stateName]) {
-            // 不可编辑时隐藏输入框
-            $root.find('.iconbox-icontitleinput').hide();
-          }
-        } else if (stateName == 'ableChecked') {
-          switchShowHide($root, opt[stateName], 'checkbox');
-        } else if (stateName == 'ableDel') {
-          switchShowHide($root, opt[stateName], 'delbtn');
-        }
       }
     }
   };
@@ -639,50 +592,48 @@
     if (dataIcon.extraClass) {
       $iconImg.addClass(dataIcon.extraClass);
     }
-
-    // 角标
+    if (opt.ableChecked) {
+      // 如果图标可选，加上多选按钮
+      var $checkboxChildren = $('<a class="iconbox-checkbox iconbox-checkbox__children"></a>');
+      if (dataBox) {
+        $checkboxChildren.hide();
+      }
+      $icon.append($checkboxChildren);
+      bindCheckboxClick($checkboxChildren, dataIcon, dataBox);
+      // 如果是选中
+      if (dataIcon.checked) {
+        changeCheckboxFlagAndView($checkboxChildren, 2);
+        if (checkboxObj) {
+          checkboxObj.size++;
+        }
+      } else {
+        changeCheckboxFlagAndView($checkboxChildren, 0);
+      }
+    }
+    if (opt.ableDel) {
+      // 如果图标可删除，则加上删除按钮
+      var $delBtn = $('<a class="iconbox-delbtn iconbox-delbtn__children"></a>');
+      if (dataBox) {
+        $delBtn.hide();
+      }
+      $icon.append($delBtn);
+      bindDelBtnClick($delBtn, opt);
+    }
     var $superscript = $('<a class="iconbox-superscript iconbox-superscript__children"></a>');
     $icon.append($superscript);
     // 更新角标
     updateIconSuperscript($icon, opt, dataIcon);
 
-    // 删除按钮
-    var $delBtn = $('<a class="iconbox-delbtn iconbox-delbtn__children"></a>');
-    $icon.append($delBtn);
-    bindDelBtnClick($delBtn, opt);
-    if (!opt.ableDel || dataBox) {
-      // 如果图标不可删除，或者在盒子里，则隐藏删除按钮
-      $delBtn.hide();
-    }
-
-    // 多选按钮
-    var $checkboxChildren = $('<a class="iconbox-checkbox iconbox-checkbox__children"></a>');
-    $icon.append($checkboxChildren);
-    bindCheckboxClick($checkboxChildren, dataIcon, dataBox);
-    // 如果是选中
-    if (dataIcon.checked) {
-      changeCheckboxFlagAndView($checkboxChildren, 2);
-      if (checkboxObj) {
-        checkboxObj.size++;
-      }
-    } else {
-      changeCheckboxFlagAndView($checkboxChildren, 0);
-    }
-    if (!opt.ableChecked || dataBox) {
-      // 如果图标不可选，或者在盒子里，则隐藏多选按钮
-      $checkboxChildren.hide();
-    }
-
     bindClick($icon, dataIcon, opt);
     $icon.append($iconImg);
     $icon.append($iconTitle);
-
-    // 编辑标题单行文本框
-    var $iconTitleInput = $('<input type="text" class="iconbox-icontitleinput" value="' + dataIcon.title + '">');
-    $icon.append($iconTitleInput);
-    bindTitleClick($iconTitle, opt);
-    bindTitleInputClick($iconTitleInput, opt);
-    
+    if (opt.ableEditTitle) {
+      // 如果能够编辑标题，则加上单行文本框
+      var $iconTitleInput = $('<input type="text" class="iconbox-icontitleinput" value="' + dataIcon.title + '">');
+      $icon.append($iconTitleInput);
+      bindTitleClick($iconTitle, opt);
+      bindTitleInputClick($iconTitleInput, opt);
+    }
     return $icon;
   }
 
@@ -723,22 +674,26 @@
     // 多选按钮
     var $checkbox = $('<a class="iconbox-checkbox iconbox-checkbox__parent"></a>');
     $box.prepend($checkbox);
-    bindCheckboxClick($checkbox, dataBox);
-    // checkboxObj.size只会小于等于dataBox.children.length
-    if (checkboxObj.size == dataBox.children.length) {
-      changeCheckboxFlagAndView($checkbox, 2);
-    } else if (checkboxObj.size > 0) {
-      changeCheckboxFlagAndView($checkbox, 1);
-    }
-    if (!opt.ableChecked) {
-      // 如果盒子不能选中，则隐藏多选按钮
+    if (opt.ableChecked) {
+      // 盒子可以选中，则绑定多选事件
+      bindCheckboxClick($checkbox, dataBox);
+      // checkboxObj.size只会小于等于dataBox.children.length
+      if (checkboxObj.size == dataBox.children.length) {
+        changeCheckboxFlagAndView($checkbox, 2);
+      } else if (checkboxObj.size > 0) {
+        changeCheckboxFlagAndView($checkbox, 1);
+      }
+    } else {
+      // 盒子不能选中，则隐藏多选按钮
       $checkbox.hide();
     }
     // 删除按钮
     var $delBtn = $('<a class="iconbox-delbtn iconbox-delbtn__parent"></a>');
     $box.prepend($delBtn);
-    bindDelBtnClick($delBtn, opt);
-    if (!opt.ableDel) {
+    if (opt.ableDel) {
+      // 如果图标可删除，则绑定删除事件
+      bindDelBtnClick($delBtn, opt);
+    } else {
       // 如果图标不可删除，则隐藏删除按钮
       $delBtn.hide();
     }
@@ -1602,8 +1557,8 @@
     $icon.find('.iconbox-checkbox__children').show();
     // 显示图标删除按钮
     $icon.find('.iconbox-delbtn__children').show();
-    // 更新角标
-    updateIconSuperscript($icon, opt, dataIcon);
+    // 显示角标
+    $icon.find('.iconbox-superscript__children').show();
     // 显示盒子内图标标题
     $icon.find('.iconbox-icontitle').show();
     // 缩略图放大
@@ -1696,20 +1651,6 @@
     for (var i = 0; i < data.children.length; i++) {
       var dataIcon = data.children[i];
       updateIconSuperscript($icons.eq(i), opt, dataIcon);
-    }
-  }
-
-  function switchShowHide($root, beAble, name) {
-    if (beAble) {
-      // 关闭的盒子的xxx显示
-      $root.find('.iconbox__close .iconbox-' + name + '__parent').show();
-      // 打开的盒子里的图标的xxx显示
-      $root.find('.iconbox__open .iconbox-' + name + '__children').show();
-      // 最外层的图标的xxx显示
-      $root.find('.iconbox-a.icondesktopbox .iconbox-' + name + '__children').show();
-    } else {
-      // 所有xxx隐藏
-      $root.find('.iconbox-' + name).hide();
     }
   }
 
