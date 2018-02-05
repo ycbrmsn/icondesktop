@@ -1,7 +1,7 @@
 /**
  * 模拟手机桌面
  * @auther jzw
- * @version 1.6.2
+ * @version 1.6.0
  * @history
  *   1.0.0 完成基本功能
  *   1.0.2 加上盒子多选功能
@@ -32,8 +32,6 @@
  *   1.5.2 修改带有角标的图标移入盒子后角标未隐藏的问题
  *   1.5.3 修改getData()方法返回不是一个数组的问题，修改删除所有图标后页码出错的问题
  *   1.6.0 新增根据图标的一个属性或多个属性数据来查询该图标的具体数据的方法
- *   1.6.1 修改jquery1.8.3版本下打开盒子后隐藏图标未显示的问题
- *   1.6.2 修改盒子交换后节点未进行移动导致数据错误的问题
  */
 ;(function (factory) {
   if (typeof define === "function" && define.amd) {
@@ -242,7 +240,7 @@
             'fontSize': opt.openBoxTitleFontSize + 'px'
           });
           // 缩略图放大
-          $this.find('.iconbox-a').show().animate({
+          $this.find('.iconbox-a').animate({
             'width': opt.closeBoxWidth + 'px',
             'height': opt.closeBoxHeight + 'px',
             'margin': opt.openBoxIconMargin + 'px'
@@ -298,7 +296,6 @@
             updateBoxSuperscript($this, opt);
             // 显示盒子背景图片
             $this.find('.iconbox-bg').show();
-            // 盒子里超过9个图标后隐藏
             $this.find('.iconbox-a').each(function () {
               if ($(this).index() > opt.maxShowIconInBox) {
                 $(this).hide();
@@ -1539,19 +1536,6 @@
         'prevTop': $(this).css('top')
       });
     });
-    // dom节点位置变换
-    var $thisNext = $this.next('.icondesktopbox');
-    var $iconBelowNext = $iconBelow.next('.icondesktopbox');
-    if ($thisNext.size()) {
-      $iconBelow.insertBefore($thisNext);
-    } else {
-      $iconBelow.appendTo($iconBelow.parent());
-    }
-    if ($iconBelowNext.size()) {
-      $this.insertBefore($iconBelowNext);
-    } else {
-      $this.appendTo($this.parent());
-    }
   }
 
   /**
@@ -1745,7 +1729,6 @@
   function updateIconInBoxSuperscript($box, opt, data) {
     if (!data) {
       data = getIconData($box, opt);
-      console.log(data)
     }
     var $icons = $box.find('.iconbox-a');
     for (var i = 0; i < data.children.length; i++) {

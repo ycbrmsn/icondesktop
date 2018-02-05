@@ -3,10 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <title>桌面demo</title>
-  <script type="text/javascript" src="js/jquery-debug.js"></script>
+  <script type="text/javascript" src="js/jquery-1.11.0.min.js"></script>
   <script type="text/javascript" src="js/jquery.color-2.1.0.min.js"></script>
-  <script type="text/javascript" src="js/jquery.iconbox.js"></script>
-  <link rel="stylesheet" type="text/css" href="css/iconbox.css">
+  <script type="text/javascript" src="js/jquery.iconbox-1.5.1.js"></script>
+  <link rel="stylesheet" type="text/css" href="css/iconbox-1.5.1.css">
 </head>
 <body>
   <div style="width: 800px; height: 528px; margin: 0 auto;" class="icondesktop" id="icondesktop"></div>
@@ -19,7 +19,6 @@
     <option>ableDel</option>
     <option>ableDrag</option>
   </select><input type="button" onclick="desktop.switchState($(this).prev().val());" value="切换">
-  <input type="button" onclick="console.log(desktop.getIconData({title:'图标就是2',img:'img/email.png'}));" value="查询图标数据">
   <script type="text/javascript">
     var desktop = $('#icondesktop').iconbox({
       data: [

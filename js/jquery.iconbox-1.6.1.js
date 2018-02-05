@@ -1,7 +1,7 @@
 /**
  * 模拟手机桌面
  * @auther jzw
- * @version 1.6.2
+ * @version 1.6.1
  * @history
  *   1.0.0 完成基本功能
  *   1.0.2 加上盒子多选功能
@@ -33,7 +33,6 @@
  *   1.5.3 修改getData()方法返回不是一个数组的问题，修改删除所有图标后页码出错的问题
  *   1.6.0 新增根据图标的一个属性或多个属性数据来查询该图标的具体数据的方法
  *   1.6.1 修改jquery1.8.3版本下打开盒子后隐藏图标未显示的问题
- *   1.6.2 修改盒子交换后节点未进行移动导致数据错误的问题
  */
 ;(function (factory) {
   if (typeof define === "function" && define.amd) {
@@ -1539,19 +1538,6 @@
         'prevTop': $(this).css('top')
       });
     });
-    // dom节点位置变换
-    var $thisNext = $this.next('.icondesktopbox');
-    var $iconBelowNext = $iconBelow.next('.icondesktopbox');
-    if ($thisNext.size()) {
-      $iconBelow.insertBefore($thisNext);
-    } else {
-      $iconBelow.appendTo($iconBelow.parent());
-    }
-    if ($iconBelowNext.size()) {
-      $this.insertBefore($iconBelowNext);
-    } else {
-      $this.appendTo($this.parent());
-    }
   }
 
   /**

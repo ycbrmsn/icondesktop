@@ -1,7 +1,7 @@
 /**
  * 模拟手机桌面
  * @auther jzw
- * @version 1.6.2
+ * @version 1.5.2
  * @history
  *   1.0.0 完成基本功能
  *   1.0.2 加上盒子多选功能
@@ -30,10 +30,6 @@
  *   1.5.0 增加切换状态功能
  *   1.5.1 修改在盒子中新增图标带上多选框的问题
  *   1.5.2 修改带有角标的图标移入盒子后角标未隐藏的问题
- *   1.5.3 修改getData()方法返回不是一个数组的问题，修改删除所有图标后页码出错的问题
- *   1.6.0 新增根据图标的一个属性或多个属性数据来查询该图标的具体数据的方法
- *   1.6.1 修改jquery1.8.3版本下打开盒子后隐藏图标未显示的问题
- *   1.6.2 修改盒子交换后节点未进行移动导致数据错误的问题
  */
 ;(function (factory) {
   if (typeof define === "function" && define.amd) {
@@ -242,7 +238,7 @@
             'fontSize': opt.openBoxTitleFontSize + 'px'
           });
           // 缩略图放大
-          $this.find('.iconbox-a').show().animate({
+          $this.find('.iconbox-a').animate({
             'width': opt.closeBoxWidth + 'px',
             'height': opt.closeBoxHeight + 'px',
             'margin': opt.openBoxIconMargin + 'px'
@@ -298,7 +294,6 @@
             updateBoxSuperscript($this, opt);
             // 显示盒子背景图片
             $this.find('.iconbox-bg').show();
-            // 盒子里超过9个图标后隐藏
             $this.find('.iconbox-a').each(function () {
               if ($(this).index() > opt.maxShowIconInBox) {
                 $(this).hide();
@@ -511,7 +506,7 @@
       },
       // 获得data
       getData: function () {
-        var allData = jQuery.extend(true, [], opt.data);
+        var allData = jQuery.extend(true, {}, opt.data);
         return allData;
       },
       // 桌面图标自动补齐刷新，1.2.0版本开始，此方法废弃
@@ -549,30 +544,6 @@
         } else if (stateName == 'ableDel') {
           switchShowHide($root, opt[stateName], 'delbtn');
         }
-      },
-      /**
-       * 根据图标的一个属性或多个属性数据来查询该图标的具体数据
-       * @param  {[type]} obj [description]
-       * @return {[type]}     [description]
-       */
-      getIconData: function (obj) {
-        var d = [];
-        for (var i = 0; i < opt.data.length; i++) {
-          var element = opt.data[i];
-          if (element.children && element.children.length) {
-            for (var j = 0; j < element.children.length; j++) {
-              var ele = element.children[j];
-              if (isMatched(ele, obj)) {
-                d.push(ele);
-              }
-            }
-          } else {
-            if (isMatched(element, obj)) {
-              d.push(element);
-            }
-          }
-        }
-        return d;
       }
     }
   };
@@ -1539,19 +1510,6 @@
         'prevTop': $(this).css('top')
       });
     });
-    // dom节点位置变换
-    var $thisNext = $this.next('.icondesktopbox');
-    var $iconBelowNext = $iconBelow.next('.icondesktopbox');
-    if ($thisNext.size()) {
-      $iconBelow.insertBefore($thisNext);
-    } else {
-      $iconBelow.appendTo($iconBelow.parent());
-    }
-    if ($iconBelowNext.size()) {
-      $this.insertBefore($iconBelowNext);
-    } else {
-      $this.appendTo($this.parent());
-    }
   }
 
   /**
@@ -1581,10 +1539,6 @@
     // 如果当前页数大于总页数，则当前页数置为最后一页
     if (currentPageIndex >= opt.pages) {
       currentPageIndex = opt.pages - 1;
-    }
-    if (currentPageIndex < 0) {
-      // 当前页序号小于0，即总页数为0时，当前页为第一页
-      currentPageIndex = 0;
     }
     // 桌面页码切换
     $root.find('.icondesktop-slidebox').css({
@@ -1745,7 +1699,6 @@
   function updateIconInBoxSuperscript($box, opt, data) {
     if (!data) {
       data = getIconData($box, opt);
-      console.log(data)
     }
     var $icons = $box.find('.iconbox-a');
     for (var i = 0; i < data.children.length; i++) {
@@ -1766,23 +1719,6 @@
       // 所有xxx隐藏
       $root.find('.iconbox-' + name).hide();
     }
-  }
-
-  /**
-   * 判断obj中的所有属性值是否都与data中对应的属性值相同
-   * @param  {object}  data [description]
-   * @param  {object}  obj  [description]
-   * @return {Boolean}      [description]
-   */
-  function isMatched(data, obj) {
-    var val = true;
-    for (var i in obj) {
-      if (obj[i] != data[i]) {
-        val = false;
-        break;
-      }
-    }
-    return val;
   }
 
   // 点击图标标题可编辑，写在这里主要用于阻止冒泡
