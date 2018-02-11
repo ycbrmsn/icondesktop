@@ -3,37 +3,39 @@
  * @auther jzw
  * @version 1.6.2
  * @history
- *   1.0.0 完成基本功能
- *   1.0.2 加上盒子多选功能
- *   1.0.4 修复盒子关闭时可以点击里面图标的问题
- *   1.0.6 加上图标显示的最大字数的相关限制参数
- *   1.0.8 让盒子和图标可以共存
- *   1.1.0 让盒子和图标可以拖动，并且图标可以拖动到盒子里
- *   1.1.2 点击图标的标题可编辑
- *   1.1.3 重构代码
- *   1.1.4 拖动盒子互换功能加上提示
- *   1.1.6 桌面图标刷新（自动排列补齐）功能
- *   1.1.8 加上桌面水平内边距与垂直内边距、图标水平间距与垂直间距四个配置选项
- *   1.1.10 加上盒子删除功能，修改盒子多选功能配置
- *   1.1.11 修复翻页的bug
+ *   1.0.0 2018-01-16 完成基本功能
+ *   1.0.2 2018-01-18 加上盒子多选功能
+ *   1.0.4 2018-01-25 修复盒子关闭时可以点击里面图标的问题
+ *   1.0.6 2018-01-25 加上图标显示的最大字数的相关限制参数
+ *   1.0.8 2018-01-25 让盒子和图标可以共存
+ *   1.1.0 2018-01-25 让盒子和图标可以拖动，并且图标可以拖动到盒子里
+ *   1.1.2 2018-01-25 点击图标的标题可编辑
+ *   1.1.3 2018-01-25 重构代码
+ *   1.1.4 2018-01-25 拖动盒子互换功能加上提示
+ *   1.1.6 2018-01-25 桌面图标刷新（自动排列补齐）功能
+ *   1.1.8 2018-01-25 加上桌面水平内边距与垂直内边距、图标水平间距与垂直间距四个配置选项
+ *   1.1.10 2018-01-25 加上盒子删除功能，修改盒子多选功能配置
+ *   1.1.11 2018-01-25 修复翻页的bug
  *   调整版本号规则
- *   1.2.0 调整桌面图标刷新功能，方法名由refreshIcon改为refreshDesktop，使当前页有图标时，不再回到第一页，refreshIcon方法废弃
- *   1.3.0 新增根据data新增图标功能
- *   1.3.1 修改标题不可修改时盒子里的图标溢出的问题
- *   1.3.2 修改重复加载事件重复绑定的问题
- *   1.4.0 新增图标角标
- *   1.4.1 修改1.3.2版本出现的图标不能拖拽等问题
- *   1.4.2 修改拖动组合图标后角标未更新的问题
- *   1.4.3 支持拖动功能可选配置，默认为可拖动
- *   1.4.4 修改在盒子中新增图标带上0角标的问题
- *   1.4.5 让角标在删除按钮之下,删除按钮在多选按钮之下
- *   1.5.0 增加切换状态功能
- *   1.5.1 修改在盒子中新增图标带上多选框的问题
- *   1.5.2 修改带有角标的图标移入盒子后角标未隐藏的问题
- *   1.5.3 修改getData()方法返回不是一个数组的问题，修改删除所有图标后页码出错的问题
- *   1.6.0 新增根据图标的一个属性或多个属性数据来查询该图标的具体数据的方法
- *   1.6.1 修改jquery1.8.3版本下打开盒子后隐藏图标未显示的问题
- *   1.6.2 修改盒子交换后节点未进行移动导致数据错误的问题
+ *   1.2.0 2018-01-25 调整桌面图标刷新功能，方法名由refreshIcon改为refreshDesktop，使当前页有图标时，不再回到第一页，refreshIcon方法废弃
+ *   1.3.0 2018-01-25 新增根据data新增图标功能
+ *   1.3.1 2018-01-25 修改标题不可修改时盒子里的图标溢出的问题
+ *   1.3.2 2018-01-25 修改重复加载事件重复绑定的问题
+ *   1.4.0 2018-01-26 新增图标角标
+ *   1.4.1 2018-01-26 修改1.3.2版本出现的图标不能拖拽等问题
+ *   1.4.2 2018-01-26 修改拖动组合图标后角标未更新的问题
+ *   1.4.3 2018-01-26 支持拖动功能可选配置，默认为可拖动
+ *   1.4.4 2018-01-26 修改在盒子中新增图标带上0角标的问题
+ *   1.4.5 2018-01-26 让角标在删除按钮之下,删除按钮在多选按钮之下
+ *   1.5.0 2018-01-26 增加切换状态功能
+ *   1.5.1 2018-01-26 修改在盒子中新增图标带上多选框的问题
+ *   1.5.2 2018-01-26 修改带有角标的图标移入盒子后角标未隐藏的问题
+ *   1.5.3 2018-01-27 修改getData()方法返回不是一个数组的问题，修改删除所有图标后页码出错的问题
+ *   1.6.0 2018-01-27 新增根据图标的一个属性或多个属性数据来查询该图标的具体数据的方法
+ *   1.6.1 2018-01-30 修改jquery1.8.3版本下打开盒子后隐藏图标未显示的问题
+ *   1.6.2 2018-01-30 修改盒子交换后节点未进行移动导致数据错误的问题
+ *   2.0.0 划分桌面区域，增加桌面工具，桌面工具在桌面上放不下时将不会显示出来，调整一行或一列时的图标位置，
+ *     桌面大小变化时调整图标位置，图标/盒子/工具皆可调换位置，移动时可在不同页移动
  */
 ;(function (factory) {
   if (typeof define === "function" && define.amd) {
@@ -80,6 +82,7 @@
         {
           title: '图标1',
           extraClass: '',
+          size: '1x1',
           children: [
             {
               title: '电子邮件',
@@ -92,6 +95,7 @@
         {
           title: '图标2',
           extraClass: '',
+          size: '1x1',
           children: [
             {
               title: '电子邮件',
@@ -128,15 +132,22 @@
       opt.closeBoxVerticalMargin = opt.closeBoxMargin;
     }
     this.each(function () {
+      var $root = $(this);
+
       // 初始化数据
       init($(this), opt);
+
+      // 桌面大小改变重新初始化
+      $(this).off('resize').on('resize', function () {
+        init($root, opt);
+      });
 
       // 点击翻页
       $(this).off('click', '.icondesktop-pageitem').on('click', '.icondesktop-pageitem', function () {
         // index从0开始
         var pageIndex = $(this).index();
         turnPage($(this).parents('.icondesktop'), pageIndex, opt.width, opt.pages);
-      })
+      });
 
       // 滑动翻页
       var mousedownX;
@@ -147,8 +158,13 @@
         mousedownX = e.pageX;
       });
       $(this).off('mousemove').on('mousemove', function (e) {
-        var currentX = e.pageX;
+        if (ev) {
+          ev.returnValue = false
+        }
+        e.preventDefault();
+        e.stopPropagation();
         if (isMouseDown) {
+          var currentX = e.pageX;
           if (currentX - mousedownX > minDistance) { // 有效右滑，上一页
             turnPage($(this), currentPageIndex - 1, opt.width, opt.pages);
             isMouseDown = false;
@@ -156,10 +172,19 @@
             turnPage($(this), currentPageIndex + 1, opt.width, opt.pages);
             isMouseDown = false;
           }
+        } else if (opt.ableDrag && opt.moveObj) {
+          // 移动盒子/图标
+          moveIcon(opt.moveObj, opt, e);
         }
       });
-      $(this).off('mouseup').on('mouseup', function () {
+      $(this).off('mouseup').on('mouseup', function (e) {
         isMouseDown = false;
+        e.preventDefault();
+        e.stopPropagation();
+        if (opt.ableDrag && opt.moveObj) {
+          // 取消盒子/图标移动
+          cancelIconMove(opt.moveObj, opt);
+        }
       });
 
       // 打开/关闭盒子
@@ -394,12 +419,15 @@
         e.preventDefault();
         e.stopPropagation();
         var $this = $(this);
+        opt.moveObj = $this;
         // 非打开状态按下，并且可以拖动
         if (!$this.hasClass('iconbox__open') && opt.ableDrag) {
           $this.attr({
             'isMouseDownIcon': true
           });
-          mouseDownIconTimeCurrent = new Date().getTime();
+          opt.moveIconObj.mouseDownIconPrevPoint.x = Math.floor(e.pageX);
+          opt.moveIconObj.mouseDownIconPrevPoint.y = Math.floor(e.pageY);
+
           opt.moveIconObj.timeout = setTimeout(function () {
             // 生成一个半透明的指示位置图标
             var $flagDom = $($this.clone());
@@ -448,36 +476,43 @@
         }
       });
       // 鼠标拖动盒子/图标事件
-      $(this).off('mousemove', '.icondesktopbox').on('mousemove', '.icondesktopbox', function (e) {
-        if (ev) {
-          ev.returnValue = false
-        }
-        e.preventDefault();
-        e.stopPropagation();
-        var $this = $(this);
-        if (opt.ableDrag) {
-        // 移动盒子/图标
-          moveIcon($this, opt, e);
-        }
-      });
-      $(this).off('mouseup', '.icondesktopbox').on('mouseup', '.icondesktopbox', function (e) {
-        e.preventDefault();
-        e.stopPropagation();
-        var $this = $(this);
-        if (opt.ableDrag) {
-          // 取消盒子/图标移动
-          cancelIconMove($this, opt);
-        }
-      });
+      // $(this).off('mousemove').on('mousemove', function (e) {
+      //   if (ev) {
+      //     ev.returnValue = false
+      //   }
+      //   e.preventDefault();
+      //   e.stopPropagation();
+      //   var $this = $(this);
+      //   if (opt.ableDrag && opt.moveObj) {
+      //     // 移动盒子/图标
+      //     moveIcon(opt.moveObj, opt, e);
+      //   }
+      // });
+      // $(this).off('mouseup').on('mouseup', function (e) {
+      //   e.preventDefault();
+      //   e.stopPropagation();
+      //   var $this = $(this);
+      //   if (opt.ableDrag && opt.moveObj) {
+      //     // 取消盒子/图标移动
+      //     cancelIconMove(opt.moveObj, opt);
+      //   }
+      // });
       $(this).off('mouseleave', '.icondesktopbox').on('mouseleave', '.icondesktopbox', function (e) {
         e.preventDefault();
         e.stopPropagation();
         var $this = $(this);
-        if (opt.ableDrag) {
-          // 取消盒子/图标移动
-          cancelIconMove($this, opt);
+        if (opt.ableDrag && opt.moveObj) {
+          // // 取消盒子/图标移动
+          // cancelIconMove($this, opt);
+          // opt.moveObj.css({
+          //   'left': parseInt(opt.moveObj.css('left')) +  moveIconObj.mouseDownIconCurrentPoint.x + 'px',
+          //   'top': parseInt(opt.moveObj.css('top')) + moveIconObj.mouseDownIconCurrentPoint.y + 'px'
+          // });
+          // moveIcon(opt.moveObj, opt, e);
         }
       });
+
+
     });
     var $root = $(this);
     return {
@@ -584,24 +619,18 @@
    * @return {[type]}       [description]
    */
   function initData($root, opt) {
-    var width = $root.width();
-    var height = $root.height();
-    opt.width = width;
-    opt.height = height;
-    // 计算水平可以放几个盒子
-    // (桌面宽度 - 桌面左右的内边距 + 图标之间的水平外边距) / (图标的宽度 + 图标的水平外边距)
-    var horSize = Math.floor((width - opt.desktopHorizontalPadding * 2 + opt.closeBoxHorizontalMargin) / (opt.closeBoxWidth + opt.closeBoxHorizontalMargin));
-    // 计算垂直方向可以放几个盒子
-    // (桌面高度 - 分页栏高度 - 上边桌面的内边距 + 图标之间的垂直外边距) / (图标高度 + 图标名称 + 图标垂直外边距)
-    var verSize = Math.floor((height - opt.pageHeight - opt.desktopVerticalPadding + opt.closeBoxVerticalMargin) / (opt.closeBoxHeight + opt.closeBoxTitleHeight + opt.closeBoxVerticalMargin));
-    // 一页的盒子数量
-    var pageSize = horSize * verSize;
-    // 页数
-    var pages = Math.ceil(opt.data.length / pageSize);
-    opt.horSize = horSize;
-    opt.verSize = verSize;
-    opt.pageSize = pageSize;
-    opt.pages = pages;
+    opt.desktopWidth = $root.width();
+    opt.desktopHeight = $root.height();
+
+    // 将桌面划分成若干个格子
+    separateDesktopGrids($root, opt);
+
+    if (opt.pageSize == 0) {
+      return;
+    }
+
+    // 填充数据的位置信息
+    fillLocation(opt.data, opt);
 
     // 计算盒子内小图标间距，固定为九宫格排列
     var horIconInCloseBoxMargin = ((opt.closeBoxWidth - opt.closeBoxPadding * 2) / 3 - opt.thumbnailWidth) / 2;
@@ -659,6 +688,8 @@
     $icon.addClass('iconbox-a');
     if (!dataBox) {
       $icon.addClass('icondesktopbox');
+      // 设置图标的位置
+      setLocations($icon, dataIcon, opt);
     }
     var $iconTitle = $(document.createElement('label'));
     $iconTitle.addClass('iconbox-icontitle');
@@ -780,7 +811,44 @@
     updateBoxSuperscript($box, opt, dataBox);
     // 隐藏盒子里图标的角标
     $box.find('.iconbox-superscript__children').hide();
+
+    // 设置盒子的位置
+    setLocations($box, dataBox, opt);
+
     return $box;
+  }
+
+  function constructTool(opt, dataTool) {
+    if (!dataTool.location) {
+      return $('');
+    }
+    var $tool = $(dataTool.content);
+    var dimension = getToolDimension(opt, dataTool);
+    $tool.addClass('icondesktopbox');
+    $tool.css({
+      'position': 'absolute',
+      'width': dimension.width + 'px',
+      'height': dimension.height + 'px'
+    });
+    // 设置工具的位置
+    setLocations($tool, dataTool, opt);
+
+    return $tool;
+  }
+
+  function getToolDimension(opt, dataTool) {
+    var sizeInfo = parseSizeInfo(dataTool.size);
+    var width = (opt.closeBoxWidth + opt.closeBoxRealHorizontalMargin) * sizeInfo.col - opt.closeBoxRealHorizontalMargin;
+    var height = (opt.closeBoxHeight + opt.closeBoxTitleHeight + opt.closeBoxRealVerticalMargin) * sizeInfo.row - opt.closeBoxRealVerticalMargin;
+    var borderWidth = dataTool.borderWidth;
+    if (borderWidth) {
+      width -= borderWidth * 2;
+      height -= borderWidth * 2;
+    }
+    return {
+      width: width,
+      height: height
+    }
   }
 
   /**
@@ -790,6 +858,11 @@
    * @return {[type]}             [description]
    */
   function initDoms($root, opt) {
+    // 清空节点
+    $root.empty();
+    if (opt.pageSize == 0) {
+      return;
+    }
     var $dl = $(document.createElement('dl'));
     $dl.addClass('icondesktop-slidebox');
     var $pagePanel = $(document.createElement('div'));
@@ -797,10 +870,18 @@
     var $pageBox = $(document.createElement('div'));
     $pageBox.addClass('icondesktop-pagebox');
     $pagePanel.append($pageBox);
+    var pageIndex = -1;
     for (var i = 0; i < opt.data.length; i++) {
       var dataBox = opt.data[i];
       // 下一页
-      if (i % opt.pageSize === 0) {
+      var locationInfo = parseLocationInfo(dataBox.location);
+      if (!locationInfo) {
+        // 没有位置信息，即该工具在桌面上放不下(上方条件)
+        // 则忽略该工具
+        continue;
+      }
+      if (pageIndex != locationInfo.page) {
+        pageIndex = locationInfo.page;
         // 创建新桌面
         var $dd = $(document.createElement('dd'));
         $dd.addClass('icondesktop-slide');
@@ -815,7 +896,11 @@
         $pageBox.append($pageNum);
       }
       // 如果是盒子，则创建盒子；如果是图标，则创建图标
-      if (dataBox.img) {
+      if (dataBox.type == 'tool') {
+        // 是工具
+        var $tool = constructTool(opt, dataBox);
+        $dd.append($tool);
+      } else if (dataBox.img) {
         // 是图标
         dataIcon = dataBox;
         // 创建图标
@@ -827,8 +912,6 @@
         $dd.append($box);
       }
     }
-    // 清空节点
-    $root.empty();
     // 添加桌面
     $root.append($dl);
     // 添加分页栏
@@ -873,17 +956,17 @@
     // 根据页数设置所有桌面的总长度
     $root.find('.icondesktop-slidebox').width(opt.width * opt.pages);
     // 盒子/图标定位
-    $root.find('.icondesktopbox').each(function (index, element) {
-      // 此处index从0开始
-      // 垂直序数，从0开始
-      var topIndex = Math.floor(index % opt.pageSize / opt.horSize);
-      // 水平序数，从0开始
-      var leftIndex = index % opt.horSize;
-      $(this).css({
-        top: topIndex * (opt.closeBoxHeight + opt.closeBoxVerticalMargin + opt.closeBoxTitleHeight) + opt.desktopVerticalPadding + 'px', 
-        left: leftIndex * (opt.closeBoxWidth + opt.closeBoxHorizontalMargin) + opt.desktopHorizontalPadding + 'px'
-      });
-    });
+    // $root.find('.icondesktopbox').each(function (index, element) {
+    //   // 此处index从0开始
+    //   // 垂直序数，从0开始
+    //   var topIndex = Math.floor(index % opt.pageSize / opt.horSize);
+    //   // 水平序数，从0开始
+    //   var leftIndex = index % opt.horSize;
+    //   $(this).css({
+    //     top: topIndex * (opt.closeBoxHeight + opt.closeBoxRealVerticalMargin + opt.closeBoxTitleHeight) + opt.desktopVerticalPadding + 'px', 
+    //     left: leftIndex * (opt.closeBoxWidth + opt.closeBoxRealHorizontalMargin) + opt.desktopHorizontalPadding + 'px'
+    //   });
+    // });
   }
 
   function setBoxStyle($box, opt) {
@@ -1033,8 +1116,8 @@
     var moveIconObj = opt.moveIconObj;
     // 图标处于在移动状态
     if ($this.attr('isMouseDownMove')) {
-      moveIconObj.mouseDownIconCurrentPoint.x = e.pageX;
-      moveIconObj.mouseDownIconCurrentPoint.y = e.pageY;
+      moveIconObj.mouseDownIconCurrentPoint.x = Math.floor(e.pageX);
+      moveIconObj.mouseDownIconCurrentPoint.y = Math.floor(e.pageY);
       // 更新盒子/图标的移动位置
       $this.css({
         'left': parseInt($this.css('left')) + moveIconObj.mouseDownIconCurrentPoint.x - moveIconObj.mouseDownIconPrevPoint.x + 'px',
@@ -1125,8 +1208,8 @@
         }, 500);
       }
     }
-    moveIconObj.mouseDownIconPrevPoint.x = e.pageX;
-    moveIconObj.mouseDownIconPrevPoint.y = e.pageY;
+    moveIconObj.mouseDownIconPrevPoint.x = moveIconObj.mouseDownIconCurrentPoint.x;
+    moveIconObj.mouseDownIconPrevPoint.y = moveIconObj.mouseDownIconCurrentPoint.y;
   }
 
   /**
@@ -1136,6 +1219,7 @@
    * @return {[type]}             [description]
    */
   function cancelIconMove($this, opt) {
+    opt.moveObj = null;
     var moveIconObj = opt.moveIconObj;
     // 是否鼠标按下
     if ($this.attr('isMouseDownIcon')) {
@@ -1155,12 +1239,14 @@
         if (moveIconObj.isSuspended && $iconBelow) {
           // 如果拖动盒子/图标处于悬浮状态
           if ($this.hasClass('iconbox__close')) {
-            // 如果被拖动物体是一个盒子，则交换位置
+            // 如果被拖动物体是一个盒子(上方条件)
+            // 则交换位置
             exchangeData(opt.data, getIconIndex($this), getIconIndex($iconBelow));
             exchangeDoms($this, $iconBelow, opt);
             moveFlag = 1;
           } else {
-            // 如果被拖动物体是一个图标，则进行分组
+            // 如果被拖动物体是一个图标(上方条件)
+            // 则进行分组
             var dstData = groupData(opt.data, getIconIndex($this), getIconIndex($iconBelow));
             // 此处$this与$iconBelow被删除重新创建，所以重新赋值
             $groupObj = groupDoms($this, $iconBelow, opt, dstData);
@@ -1170,7 +1256,8 @@
             moveFlag = 2;
           }
         } else {
-          // 如果不是，则还原
+          // 如果不是(上方条件)
+          // 则还原
           if ($this.hasClass('iconbox-a')) {
             // 如果是图标，则调整图标大小
             $this.animate({
@@ -1410,6 +1497,8 @@
       newData = {
         title: '新分组',
         extraClass: dstData.extraClass,
+        size: dstData.size,
+        location: dstData.location,
         children: [dstData, srcData]
       };
       // 那么判断srcIndex与dstIndex哪个大，先删除大的，序号将不会受到影响
@@ -1783,6 +1872,445 @@
       }
     }
     return val;
+  }
+
+  /**
+   * [separateDesktopGrids 划分桌面成若干个格子]
+   * @param  {[type]} $root [description]
+   * @param  {[type]} opt   [description]
+   * @return {[type]}       [description]
+   */
+  function separateDesktopGrids($root, opt) {
+    var width = $root.width();
+    var height = $root.height();
+    opt.width = width;
+    opt.height = height;
+
+    // 桌面下方的间距，如果分页栏高就以分页栏高度为标准；如果桌面间距高，就以桌面间距为标准
+    var desktopBottomPadding = opt.pageHeight > opt.desktopVerticalPadding ? opt.pageHeight : opt.desktopVerticalPadding;
+    // 计算水平可以放几个盒子
+    // (桌面宽度 - 桌面左右的内边距 + 图标之间的水平外边距) / (图标的宽度 + 图标的水平外边距)
+    var horSize = Math.floor((width - opt.desktopHorizontalPadding * 2 + opt.closeBoxHorizontalMargin) / (opt.closeBoxWidth + opt.closeBoxHorizontalMargin));
+    // 计算垂直方向可以放几个盒子
+    // (桌面高度 - 桌面底部间距 - 上边桌面的内边距 + 图标之间的垂直外边距) / (图标高度 + 图标名称 + 图标垂直外边距)
+    var verSize = Math.floor((height - desktopBottomPadding - opt.desktopVerticalPadding + opt.closeBoxVerticalMargin) / (opt.closeBoxHeight + opt.closeBoxTitleHeight + opt.closeBoxVerticalMargin));
+    // 一页的盒子数量
+    var pageSize = horSize * verSize;
+    // 页数
+    var pages = Math.ceil(opt.data.length / pageSize);
+    opt.horSize = horSize;
+    opt.verSize = verSize;
+    opt.pageSize = pageSize;
+    opt.pages = pages;
+
+    // 实际盒子的水平间距
+    var closeBoxRealHorizontalMargin = (width - opt.desktopHorizontalPadding * 2 - opt.closeBoxWidth * horSize) / (horSize - 1);
+    // 实际盒子的垂直间距
+    var closeBoxRealVerticalMargin = (height - desktopBottomPadding - opt.desktopVerticalPadding - opt.closeBoxHeight * verSize - opt.closeBoxTitleHeight * verSize) / (verSize - 1);
+    if (closeBoxRealVerticalMargin > opt.closeBoxHeight) {
+      // 当垂直间距大于了盒子的高度时，通常是只有两行盒子时会出现(上方条件)
+      // 此时缩小间距，不然看起来太丑了
+      closeBoxRealVerticalMargin = opt.closeBoxHeight;
+    }
+    opt.closeBoxRealHorizontalMargin = closeBoxRealHorizontalMargin;
+    opt.closeBoxRealVerticalMargin = closeBoxRealVerticalMargin;
+
+    // 记录下所有的格子
+    var grids = [];
+    // 记录下所有的分割线
+    var separationLine = {
+      lineX: [],
+      lineY: []
+    }
+    var halfBoxWidth = opt.closeBoxWidth / 2;
+    var halfBoxHeight = opt.closeBoxHeight / 2;
+    for (var i = 0; i < verSize; i++) {
+      for (var j = 0; j < horSize; j++) {
+        var locationPoint = getLocationPoint(i, j, opt);
+        var top = locationPoint.y;
+        var bottom = top + opt.closeBoxHeight;
+        var left = locationPoint.x;
+        var right = left + opt.closeBoxWidth
+        grids.push({
+          top: top,
+          bottom: bottom,
+          left: left,
+          right: right
+        });
+        if (i == 0) {
+          // 如果当前是第一行(上方条件)
+          // 则记录下所有纵向分割线
+          separationLine.lineX.push(left - halfBoxWidth);
+          separationLine.lineX.push(left);
+          separationLine.lineX.push(left + halfBoxWidth);
+          separationLine.lineX.push(right);
+        }
+        if (j == 0) {
+          // 如果当前是第一列(上方条件)
+          // 则记录下所有的横向分割线
+          separationLine.lineY.push(top - halfBoxHeight);
+          separationLine.lineY.push(top);
+          separationLine.lineY.push(top + halfBoxHeight);
+          separationLine.lineY.push(bottom);
+        }
+      }
+    }
+    opt.grids = grids;
+    opt.separationLine = separationLine;
+  }
+
+  /**
+   * [getLocationPoint 获得位置点]
+   * @param  {[type]} row [description]
+   * @param  {[type]} col [description]
+   * @param  {[type]} opt [description]
+   * @return {[type]}     [description]
+   */
+  function getLocationPoint(row, col, opt) {
+    var top, left;
+    if (opt.verSize == 1) {
+      top = (opt.desktopHeight - opt.closeBoxHeight - opt.closeBoxTitleHeight) / 2;
+    } else {
+      top = row * (opt.closeBoxHeight + opt.closeBoxRealVerticalMargin + opt.closeBoxTitleHeight) + opt.desktopVerticalPadding;
+    }
+    if (opt.horSize == 1) {
+      left = (opt.desktopWidth - opt.closeBoxWidth) / 2;
+    } else {
+      left = col * (opt.closeBoxWidth + opt.closeBoxRealHorizontalMargin) + opt.desktopHorizontalPadding;
+    }
+    return {
+      x: Math.floor(left),
+      y: Math.floor(top)
+    }
+  }
+
+  /**
+   * [fillLocation 填充数据的位置信息]
+   * @param  {[type]} data [description]
+   * @param  {[type]} opt  [description]
+   * @return {[type]}      [description]
+   */
+  function fillLocation(data, opt) {
+    // data = [
+    //   {
+    //     title: '图标1',
+    //     extraClass: '',
+    //     size: '1x1',
+    //     children: [
+    //       {
+    //         title: '电子邮件',
+    //         extraClass: 'rockicon',
+    //         superscript: 1,
+    //         img: 'img/email.png'
+    //       }
+    //     ]
+    //   }
+    // ];
+    var locationObj = {};
+    opt.locationObj = locationObj;
+
+    var pageIndex = 0;
+
+    for (var i = 0; i < data.length; i++) {
+      var element = data[i];
+      var elementSize = element.size;
+      // 补上位置信息
+      element.location = getFirstEmptyLocation(elementSize, opt);
+      var locationInfo = parseLocationInfo(element.location);
+      if (locationInfo && locationInfo.page > pageIndex) {
+        pageIndex = locationInfo.page;
+      }
+    }
+
+    // 总页数为页序数+1
+    opt.pages = pageIndex + 1;
+    // console.log(data);
+  }
+
+  /**
+   * [parseLocationInfo 从location中获取位置信息]
+   * @param  {[type]} location [description]
+   * @return {[type]}          [description]
+   */
+  function parseLocationInfo(location) {
+    if (!location) {
+      // 如果没有location信息，即该tool在桌面上放不下(上方条件)
+      return null;
+    }
+    // 第一个下划线的序数
+    var index1 = location.indexOf('_');
+    var pageIndex = parseInt(location.substring(1, index1));
+    location = location.substring(index1 + 1);
+    // 第二个下划线的序数
+    var index2 = location.indexOf('_');
+    var row = parseInt(location.substring(0, index2));
+    var col = parseInt(location.substring(index2 + 1));
+    return {
+      page: pageIndex,
+      row: row,
+      col: col
+    }
+  }
+
+  /**
+   * [parseSizeInfo 从size中获取size信息]
+   * @param  {[type]} size [description]
+   * @return {[type]}      [description]
+   */
+  function parseSizeInfo(size) {
+    size = size.replace(/\s*/g, '');
+    var arrSize = size.split('x');
+    var row = arrSize[0];
+    var col = arrSize[1];
+    return {
+      row: parseInt(row),
+      col: parseInt(col)
+    }
+  }
+
+  /**
+   * [setLocations 设置节点的位置]
+   * @param {[type]} $dom [description]
+   * @param {[type]} data [description]
+   * @param {[type]} opt  [description]
+   */
+  function setLocations($dom, data, opt) {
+    var locationInfo = parseLocationInfo(data.location);
+    var point = getLocationPoint(locationInfo.row, locationInfo.col, opt);
+    // var top, left;
+    // // debugger
+    // if (opt.verSize == 1) {
+    //   top = Math.floor((opt.desktopHeight - opt.closeBoxHeight - opt.closeBoxTitleHeight) / 2);
+    // } else {
+    //   top = locationInfo.row * (opt.closeBoxHeight + opt.closeBoxRealVerticalMargin + opt.closeBoxTitleHeight) + opt.desktopVerticalPadding;
+    // }
+    // if (opt.horSize == 1) {
+    //   left = Math.floor((opt.desktopWidth - opt.closeBoxWidth) / 2);
+    // } else {
+    //   left = locationInfo.col * (opt.closeBoxWidth + opt.closeBoxRealHorizontalMargin) + opt.desktopHorizontalPadding;
+    // }
+    // $dom.css({
+    //   top: top + 'px', 
+    //   left: left + 'px'
+    // });
+    $dom.css({
+      left: point.x + 'px',
+      top: point.y + 'px'
+    })
+  }
+
+  /**
+   * [getFirstEmptyLocation 获得第一个空位置，并向locationObj中加入占位标志；如果没有，则返回null]
+   * @param  {[type]} size [description]
+   * @param  {[type]} opt  [description]
+   * @return {[type]}      [description]
+   */
+  function getFirstEmptyLocation(size, opt) {
+    var locationObj = opt.locationObj;
+    // 页数
+    var pageIndex = 0;
+    // 位置
+    var location;
+    var sizeInfo = parseSizeInfo(size);
+    var row = sizeInfo.row;
+    var col = sizeInfo.col;
+    // 用于存储占用位置的数组
+    var arrLocation = [];
+    // 最大循环次数，避免死循环，循环十次依然找不到则认为没有足够的空间可以放置内容
+    var maxCycleTimes = 10;
+    // 当前循环次数
+    var curCycleTimes = 0;
+    outer:
+    while (curCycleTimes < maxCycleTimes) {
+      breakPage:
+      for (var i = 0; i < opt.verSize; i++) {
+        var arrLocation = [];
+        breakRow:
+        for (var j = 0; j < opt.horSize; j++) {
+          // l页数_行数_列数
+          location = getLocationKey(pageIndex, i, j);
+          if (!locationObj[location]) {
+            arrLocation.push(location);
+            // 第一个空位置(上方条件)
+            // 循环行尺寸，从0开始，即1x时会有一行循环
+            for (var ii = 0; ii < row; ii++) {
+              var curRow = i + ii;
+              if (curRow >= opt.verSize) {
+                // 如果超出了最大行数(上方条件)
+                // 则进入到下一页
+                curCycleTimes++;
+                break breakPage;
+              }
+              // 循环列尺寸，从0开始，即nx时会有n次循环
+              for (var jj = 0; jj < col; jj++) {
+                // 第一个位置去掉判断，因为第一个位置为空时才能进来
+                if (ii == 0 && jj == 0) {
+                  continue;
+                }
+                // 则首先判断该尺寸一行的大小是否合适
+                var curCol = j + jj;
+                var locationKey = getLocationKey(pageIndex, curRow, curCol);
+                if (curCol >= opt.horSize || locationObj[locationKey]) {
+                  // 如果超出了最大列数或者该位置有东西占用了(上方条件)
+                  // 则跳出列循环，进入到下一行的判断
+                  curCycleTimes++;
+                  break breakRow;
+                } else {
+                  // 如果是空的(上方条件)
+                  // 则加入位置数组
+                  arrLocation.push(locationKey);
+                }
+              }
+            }
+            break outer;
+          }
+        }
+      }
+      pageIndex++;
+    }
+    if (curCycleTimes >= maxCycleTimes) {
+      // 如果循环次数达到了最大循环次数，即找不到足够大小放置工具(上方条件)
+      return null;
+    }
+    // 匹配到空位置之后，把需要占用的位置存入locationObj中
+    for (var i = 0; i < arrLocation.length; i++) {
+      locationObj[arrLocation[i]] = true;
+    }
+    return location;
+  }
+
+  function getLocationKey(page, row, col) {
+    return 'l' + page + '_' + row + '_' + col;
+  }
+
+  /**
+   * [getMoveLocations 获得移动节点占用的所有格子]
+   * @param  {[type]} $dom [description]
+   * @return {[type]}      [description]
+   */
+  function getMoveLocations($dom, data) {
+    var left = parseInt($dom.css('left'));
+    var top = parseInt($dom.css('top'));
+    var width = parseInt($dom.css('width'));
+    var height = parseInt($dom.css('height'));
+    var centerX = left + width / 2;
+    var centerY = top + height / 2;
+    var lineX = opt.separationLine.lineX;
+    var lineY = opt.separationLine.lineY;
+
+    if (centerX <= lineX[0]) {
+      // 如果中点在第一条纵向分割线的左边(上方条件)
+      return {
+        pos: 'left'
+      }
+    } else if (centerX >= lineX[lineX.length - 1]) {
+      // 如果中点在最后一条纵向分割线的右边(上方条件)
+      return {
+        pos: 'right'
+      }
+    } else if (centerY <= lineY[0]) {
+      // 如果中点在第一条横向分割线的上边(上方条件)
+      return {
+        pos: 'top'
+      }
+    } else if (centerY >= lineY[lineY.length - 1]) {
+      // 如果中点在最后一条横向分割线的下边(上方条件)
+      return {
+        pos: 'bottom'
+      }
+    }
+    // 除了上面的其他位置，说明物体在中间的容器范围内
+     
+    // 格子的行列变量
+    var row = null, col = null;
+    // 是否在行列之中变量
+    var isEnterRow, isEnterCol;
+    for (var i = 0; i < lineX.length; i++) {
+      var x = lineX[i];
+      if (left <= x) {
+        // 如果当前位置在纵向分割线的左边(上方条件)
+        // 则确定列
+        if (i == 0) {
+          // 如果左侧位置在第一条分割线的左边(上方条件)
+          return {
+            pos: 'over'
+          }
+        } else {
+          // (1、2,3、4、5、6,7、8、9、10分组列)
+          col = Math.floor((i + 1) / 4);
+          // 左上顶点是否在格子中(1、2,5、6,9、10...在之中)
+          isEnterCol = Math.floor((i + 1) / 2) % 2 !== 0;
+        }
+      }
+    }
+    for (var i = 0; i < lineY.length; i++) {
+      var y = lineY[i];
+      if (top <= y) {
+        // 如果当前位置在横向分割线的上边(上方条件)
+        // 则确定行
+        if (i == 0) {
+          return {
+            pos: 'over'
+          }
+        } else {
+          // (1、2,3、4、5、6,7、8、9、10分组行)
+          row = Math.floor((i + 1) / 4);
+          // 左上顶点是否在格子中(1、2,5、6,9、10...在之中)
+          isEnterRow = Math.floor((i + 1) / 2) % 2 !== 0;
+        }
+      }
+    }
+
+    var sizeInfo = parseSizeInfo(data.size);
+    // 判断当前物体有没有超出当前容器
+    if (row + sizeInfo.row >= opt.verSize || col + sizeInfo.col >= opt.horSize) {
+      // 如果容器超出当前容器
+      return {
+        pos: 'over'
+      }
+    }
+
+    // 记录下物体占用的所有格子
+    var locations = [];
+    for (var i = 0; i < sizeInfo.row; i++) {
+      for (var j = 0; j < sizeInfo.col; j++) {
+        locations.push(getLocationKey(currentPageIndex, row + i, col + j));
+      }
+    }
+
+    // 除了上面的条件，则物体完全在容器之中
+    return {
+      row: row,
+      col: col,
+      pos: 'center',
+      locations: locations,
+      isEnter: isEnterRow && isEnterCol
+    }
+  }
+
+  /**
+   * [getOccupiedLocation 获得当前移动位置需要占据的位置]
+   * @param  {[type]} $dom [description]
+   * @param  {[type]} data [description]
+   * @return {[type]}      [description]
+   */
+  function getOccupiedLocation($dom, data) {
+    var locationObj = getMoveFirstPointLocation($dom);
+    var locations = [];
+    if (locationObj.pos == 'bottom' || locationObj.pos == 'right' || locationObj.pos == 'top') {
+      return {
+        pos: locationObj.pos,
+        locations: locations
+      }
+    } else if (locationObj.pos == 'left') {
+      // 当左上角点位置在左边时(上方条件)
+      // 判断
+    }
+    var sizeInfo = parseSizeInfo(data.size);
+    return {
+      pos: '', // top, bottom, left, right, over, center
+      locations: locations
+    }
   }
 
   // 点击图标标题可编辑，写在这里主要用于阻止冒泡

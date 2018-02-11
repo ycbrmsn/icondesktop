@@ -5,11 +5,12 @@
   <title>桌面demo</title>
   <script type="text/javascript" src="js/jquery-debug.js"></script>
   <script type="text/javascript" src="js/jquery.color-2.1.0.min.js"></script>
+  <script type="text/javascript" src="js/jquery.resizediv.js"></script>
   <script type="text/javascript" src="js/jquery.iconbox.js"></script>
   <link rel="stylesheet" type="text/css" href="css/iconbox.css">
 </head>
 <body>
-  <div style="width: 800px; height: 528px; margin: 0 auto;" class="icondesktop" id="icondesktop"></div>
+  <div style="width: 100%; height: 428px; margin: 0 auto;" class="icondesktop" id="icondesktop"></div>
   <input type="button" onclick="desktop.refreshIcon();" value="刷新">
   <input type="button" onclick="console.log(desktop.getData());" value="获得数据">
   <input type="button" onclick="desktop.addIcons({title:'新图标',img:'img/email.png'});" value="新增图标">
@@ -21,16 +22,17 @@
   </select><input type="button" onclick="desktop.switchState($(this).prev().val());" value="切换">
   <input type="button" onclick="console.log(desktop.getIconData({title:'图标就是2',img:'img/email.png'}));" value="查询图标数据">
   <script type="text/javascript">
-    var desktop = $('#icondesktop').iconbox({
-      data: [
-        {
-          title: '图标就是1',
-          extraClass: '',
-          superscript: '23',
-          img: 'img/email.png'
-        }
-      ]
-    });
+    // var desktop = $('#icondesktop').iconbox({
+    //   data: [
+    //     {
+    //       title: '图标就是1',
+    //       extraClass: '',
+    //       size: '1x1',
+    //       superscript: '23',
+    //       img: 'img/email.png'
+    //     }
+    //   ]
+    // });
     desktop = $('#icondesktop').iconbox({
       // desktopVerticalPadding: 50,
       // desktopAutoFill: true,
@@ -40,6 +42,8 @@
       // closeBoxVerticalMargin: 40,
       // ableDel: true,
       // ableChecked: true,
+      desktopHorizontalPadding: 90,
+      desktopVerticalPadding: 30,
       closeBoxWidth: 100,
       thumbnailWidth: 23,
       openBoxIconClick: function (data, e) {
@@ -49,38 +53,51 @@
         {
           title: '图标就是1',
           extraClass: '',
+          size: '1x1',
           superscript: 3,
           img: 'img/email.png'
         },
         {
+          type: 'tool',
+          size: '1x3',
+          borderWidth: 1,
+          content: '<div style="border: 1px solid #dedede;">你好</div>'
+        },
+        {
           title: '图标就是2',
           extraClass: '',
+          size: '1x1',
           superscript: 11,
           img: 'img/email.png'
         },
         {
           title: '图标就是3',
           extraClass: '',
+          size: '1x1',
           img: 'img/email.png'
         },
         {
           title: '图标就是4',
           extraClass: '',
+          size: '1x1',
           img: 'img/email.png'
         },
         {
           title: '图标就是5',
           extraClass: '',
+          size: '1x1',
           img: 'img/email.png'
         },
         {
           title: '图标就是6',
           extraClass: '',
+          size: '1x1',
           img: 'img/email.png'
         },
         {
           title: '图标1',
           extraClass: '',
+          size: '1x1',
           children: [
             {
               title: '电子邮件可是到了附近的斯洛伐克',
@@ -156,6 +173,7 @@
         {
           title: '图标2',
           extraClass: '',
+          size: '1x1',
           children: [
             {
               title: '新闻',
@@ -180,6 +198,7 @@
         {
           title: '图标3',
           extraClass: '',
+          size: '1x1',
           children: [
             {
               title: '通知',
@@ -202,16 +221,19 @@
         {
           title: '图标4',
           extraClass: '',
+          size: '1x1',
           img: 'img/email.png'
         },
         {
           title: '图标5',
           extraClass: '',
+          size: '1x1',
           img: 'img/email.png'
         },
         {
           title: '图标6',
           extraClass: '',
+          size: '1x1',
           children: [
             {
               title: '通知',
@@ -233,6 +255,7 @@
         {
           title: '图标7',
           extraClass: '',
+          size: '1x1',
           children: [
             {
               title: '通知',
@@ -254,6 +277,7 @@
         {
           title: '图标8',
           extraClass: '',
+          size: '1x1',
           children: [
             {
               title: '通知',
@@ -275,6 +299,7 @@
         {
           title: '图标9',
           extraClass: '',
+          size: '1x1',
           children: [
             {
               title: '通知',
@@ -296,6 +321,7 @@
         {
           title: '图标10',
           extraClass: '',
+          size: '1x1',
           children: [
             {
               title: '通知',
@@ -317,6 +343,7 @@
         {
           title: '图标11',
           extraClass: '',
+          size: '1x1',
           children: [
             {
               title: '通知',
@@ -338,6 +365,7 @@
         {
           title: '图标12',
           extraClass: '',
+          size: '1x1',
           children: [
             {
               title: '通知',
@@ -359,6 +387,7 @@
         {
           title: '图标13',
           extraClass: '',
+          size: '1x1',
           children: [
             {
               title: '通知',
@@ -380,6 +409,7 @@
         {
           title: '图标14',
           extraClass: '',
+          size: '1x1',
           children: [
             {
               title: '通知',
@@ -401,6 +431,7 @@
         {
           title: '图标15',
           extraClass: '',
+          size: '1x1',
           children: [
             {
               title: '通知',
@@ -422,6 +453,7 @@
         {
           title: '图标16',
           extraClass: '',
+          size: '1x1',
           children: [
             {
               title: '通知',
