@@ -58,7 +58,7 @@
       closeBoxWidth: 128, // 盒子关闭时的宽度
       closeBoxHeight: 0, // 盒子关闭时的高度，为0时与宽度相同
       closeBoxPadding: 10, // 盒子关闭时的内边距
-      closeBoxMargin: 20, // 盒子关闭时的外边距
+      closeBoxMargin: 30, // 盒子关闭时的外边距
       closeBoxHorizontalMargin: 0, // 盒子关闭时水平方向上的外边距，为0时与closeBoxMargin相同
       closeBoxVerticalMargin: 0, // 盒子关闭时垂直方向上的外边距，为0时与closeBoxMargin相同
       closeBoxEnlargeScale: 0.05, // 盒子关闭时的放大比例
@@ -174,6 +174,7 @@
           }
         } else if (opt.ableDrag && opt.moveObj) {
           // 移动盒子/图标
+          // console.log(e.pageX - opt.moveIconObj.mouseDownIconPrevPoint.x)
           moveIcon(opt.moveObj, opt, e);
         }
       });
@@ -460,13 +461,19 @@
               'top': iconTop - iconHeightChange + 'px',
             });
             if ($this.hasClass('iconbox-a')) {
-              // 如果是图标，则调整图标大小
+              // 如果是图标(上方条件)，则调整图标大小
               $this.css({
                 'width': iconWidth + iconWidthChange * 2 + 'px',
                 'height': iconHeight + iconHeightChange * 2 + 'px'
               });
+            } else if ($this.hasClass('iconbox-tool')) {
+              // 如果是工具(上方条件)，则调整工具大小
+              $this.css({
+                'width': $this.width() + iconWidthChange * 2 + 'px',
+                'height': $this.height() + iconHeightChange * 2 + 'px'
+              });
             } else {
-              // 如果是盒子，则调整盒子的内边距
+              // 如果是盒子(上方条件)，则调整盒子的内边距
               $this.css({
                 'padding': opt.closeBoxPadding + iconWidthChange + 'px'
               });
@@ -622,6 +629,8 @@
     opt.desktopWidth = $root.width();
     opt.desktopHeight = $root.height();
 
+    opt.sourceData = opt.data;
+
     // 将桌面划分成若干个格子
     separateDesktopGrids($root, opt);
 
@@ -673,6 +682,11 @@
     opt.ableClickBox = true;
 
     opt.openBox = {};
+    // 存储对应位置的dom节点
+    opt.locationDom = {};
+    // 移动后的位置数组，记录上一次的与上上次的位置，如果三次位置相同，则触发事件
+    opt.moveLocations = [];
+    opt.moveLocationMaxLength = 3;
   }
 
   /**
@@ -824,7 +838,7 @@
     }
     var $tool = $(dataTool.content);
     var dimension = getToolDimension(opt, dataTool);
-    $tool.addClass('icondesktopbox');
+    $tool.addClass('icondesktopbox iconbox-tool');
     $tool.css({
       'position': 'absolute',
       'width': dimension.width + 'px',
@@ -1126,6 +1140,17 @@
       if (!moveIconObj.iconInterval) {
         // 如果没有开启检查盒子/图标所在位置区域的定时器，则开启，固定为500毫秒检测一次所在位置区域
         moveIconObj.iconInterval = setInterval(function () {
+          // console.log();
+          var moveLocation = getMoveLocation($this, getIconData($this, opt).size, opt);
+          if (!isMoveLocationActive(moveLocation, opt)) {
+            // 如果移动位置不生效(上方条件)
+            // 则不进行后续操作
+            return;
+          }
+          moveToLocation($this, getIconData($this, opt), opt.data, opt);
+
+          return;
+
           // 获取盒子/图标所在位置区域的盒子/图标，即被遮挡处在下方的盒子/图标
           var $iconBelow = getIconBelow($this);
           moveIconObj.$iconBelow = $iconBelow;
@@ -1236,14 +1261,17 @@
         var moveFlag = 0;
         // 如果是，则作特殊变换
         var $iconBelow = moveIconObj.$iconBelow;
-        if (moveIconObj.isSuspended && $iconBelow) {
-          // 如果拖动盒子/图标处于悬浮状态
+        // if (moveIconObj.isSuspended && $iconBelow) {
+        if (false) {
+          // 如果拖动盒子/图标并且处于悬浮状态(上方条件)
           if ($this.hasClass('iconbox__close')) {
             // 如果被拖动物体是一个盒子(上方条件)
             // 则交换位置
             exchangeData(opt.data, getIconIndex($this), getIconIndex($iconBelow));
             exchangeDoms($this, $iconBelow, opt);
             moveFlag = 1;
+          } else if ($this.hasClass('iconbox-tool')) {
+            // 如果被拖动物体是一个工具(上方条件)，则不处理什么
           } else {
             // 如果被拖动物体是一个图标(上方条件)
             // 则进行分组
@@ -1259,12 +1287,16 @@
           // 如果不是(上方条件)
           // 则还原
           if ($this.hasClass('iconbox-a')) {
-            // 如果是图标，则调整图标大小
+            // 如果是图标(上方条件)，则调整图标大小
             $this.animate({
-              'left': $this.attr('prevLeft'),
-              'top': $this.attr('prevTop'),
-              'width': $this.attr('prevWidth'),
-              'height': $this.attr('prevHeight')
+              // 'left': $this.attr('prevLeft'),
+              // 'top': $this.attr('prevTop'),
+              // 'width': $this.attr('prevWidth'),
+              // 'height': $this.attr('prevHeight')
+              'left': moveIconObj.$flagDom.css('left'),
+              'top': moveIconObj.$flagDom.css('top'),
+              'width': moveIconObj.$flagDom.css('width'),
+              'height': moveIconObj.$flagDom.css('height')
             }, {
               'duration': 'fast',
               'easing': 'swing',
@@ -1279,16 +1311,38 @@
               }
             });
           } else if ($this.hasClass('iconbox__close')) {
-            // 如果是盒子，则调整盒子的内边距
+            // 如果是盒子(上方条件)，则调整盒子的内边距
             $this.animate({
-              'left': $this.attr('prevLeft'),
-              'top': $this.attr('prevTop'),
+              // 'left': $this.attr('prevLeft'),
+              // 'top': $this.attr('prevTop'),
+              'left': moveIconObj.$flagDom.css('left'),
+              'top': moveIconObj.$flagDom.css('top'),
               'padding': opt.closeBoxPadding + 'px'
             }, 'fast', 'swing', function () {
               $this.css({
                 'cursor': 'pointer',
                 'zIndex': 1
               });
+            });
+          } else if ($this.hasClass('iconbox-tool')) {
+            // 如果是工具(上方条件)，则调整工具大小
+            $this.animate({
+              'left': moveIconObj.$flagDom.css('left'),
+              'top': moveIconObj.$flagDom.css('top'),
+              'width': moveIconObj.$flagDom.css('width'),
+              'height': moveIconObj.$flagDom.css('height')
+            }, {
+              'duration': 'fast',
+              'easing': 'swing',
+              'step': function () {
+                // $this.css('overflow', 'visible');
+              },
+              'complete': function () {
+                $this.css({
+                  'cursor': 'pointer',
+                  'zIndex': 1
+                });
+              }
             });
           }
           recoverIconBelow($this, opt, true);
@@ -2028,6 +2082,71 @@
   }
 
   /**
+   * [fillOtherLocation 向data中填充剩余的location]
+   * @param  {[type]} data [description]
+   * @param  {[type]} opt  [description]
+   * @return {[type]}      [description]
+   */
+  function fillOtherLocation(data, opt) {
+    var locationObj = opt.locationObj;
+
+    var pageIndex = 0;
+
+    // debugger
+    for (var i = 0; i < data.length; i++) {
+      var element = data[i];
+      var elementSize = element.size;
+      if (!element.location) {
+        // 如果位置信息不存在时(上方条件)，则补上位置信息
+        element.location = getFirstEmptyLocation(elementSize, opt);
+        // 调整data
+        // 查询前一个位置
+        var loc = getNearestPrevLocation(element.location, opt);
+        // console.log(loc)
+        // debugger
+        var locIndex;
+        if (loc === null) {
+          // 如果查不到前一个位置(上方条件)，则说明是第一个位置
+          data.splice(i, 1);
+          data.unshift(element);
+          locIndex = 0;
+        } else {
+          locIndex = getIndexByLocation(loc, data) + 1;
+          if (locIndex < i) {
+            // 如果是向前移动(上方条件)，则删除当前位置，插入前方位置
+            data.splice(i, 1);
+            data.splice(locIndex, 0, element);
+          } else {
+            // debugger
+            // 如果是向后移动(上方条件)，则插入后方位置，删除当前位置，i--
+            data.splice(locIndex, 0, element);
+            data.splice(i, 1);
+            i--;
+          }
+        }
+        // debugger
+        // 移动节点
+        var $dom = element.$dom;
+        if (locIndex === 0) {
+          $dom.insertBefore(data[1].$dom);
+          console.log('insertBefore: ' + locIndex)
+        } else {
+          locIndex = getIndexByLocation(loc, data) + 1;
+          $dom.insertAfter(data[locIndex - 1].$dom);
+          console.log('insertAfter: ' + locIndex)
+        }
+      }
+      var locationInfo = parseLocationInfo(element.location);
+      if (locationInfo && locationInfo.page > pageIndex) {
+        pageIndex = locationInfo.page;
+      }
+    }
+
+    // 总页数为页序数+1
+    opt.pages = pageIndex + 1;
+  }
+
+  /**
    * [parseLocationInfo 从location中获取位置信息]
    * @param  {[type]} location [description]
    * @return {[type]}          [description]
@@ -2077,6 +2196,10 @@
   function setLocations($dom, data, opt) {
     var locationInfo = parseLocationInfo(data.location);
     var point = getLocationPoint(locationInfo.row, locationInfo.col, opt);
+    // 将dom与数据绑定
+    data.$dom = $dom;
+    var locationDom = opt.locationDom;
+    locationDom[data.location] = $dom;
     // var top, left;
     // // debugger
     // if (opt.verSize == 1) {
@@ -2109,7 +2232,7 @@
     var locationObj = opt.locationObj;
     // 页数
     var pageIndex = 0;
-    // 位置
+    // 位置(lx_x_x)
     var location;
     var sizeInfo = parseSizeInfo(size);
     var row = sizeInfo.row;
@@ -2128,8 +2251,8 @@
         breakRow:
         for (var j = 0; j < opt.horSize; j++) {
           // l页数_行数_列数
-          location = getLocationKey(pageIndex, i, j);
-          if (!locationObj[location]) {
+          location = createLocation(pageIndex, i, j);
+          if (!locationObj[location] || !locationObj[location].isOccupied) {
             arrLocation.push(location);
             // 第一个空位置(上方条件)
             // 循环行尺寸，从0开始，即1x时会有一行循环
@@ -2149,8 +2272,8 @@
                 }
                 // 则首先判断该尺寸一行的大小是否合适
                 var curCol = j + jj;
-                var locationKey = getLocationKey(pageIndex, curRow, curCol);
-                if (curCol >= opt.horSize || locationObj[locationKey]) {
+                var locationKey = createLocation(pageIndex, curRow, curCol);
+                if (curCol >= opt.horSize || (locationObj[locationKey] && locationObj[locationKey].isOccupied)) {
                   // 如果超出了最大列数或者该位置有东西占用了(上方条件)
                   // 则跳出列循环，进入到下一行的判断
                   curCycleTimes++;
@@ -2174,21 +2297,31 @@
     }
     // 匹配到空位置之后，把需要占用的位置存入locationObj中
     for (var i = 0; i < arrLocation.length; i++) {
-      locationObj[arrLocation[i]] = true;
+      locationObj[arrLocation[i]] = createLocationRelativeInfo(location, size);
     }
     return location;
   }
 
-  function getLocationKey(page, row, col) {
+  function createLocationRelativeInfo(location, size) {
+    return {
+      location: location,
+      size: size,
+      isOccupied: true
+    }
+  }
+
+  function createLocation(page, row, col) {
     return 'l' + page + '_' + row + '_' + col;
   }
 
   /**
-   * [getMoveLocations 获得移动节点占用的所有格子]
+   * [getMoveLocation 获得移动节点占用的所有格子]
    * @param  {[type]} $dom [description]
+   * @param  {[type]} size [description]
+   * @param  {[type]} opt  [description]
    * @return {[type]}      [description]
    */
-  function getMoveLocations($dom, data) {
+  function getMoveLocation($dom, size, opt) {
     var left = parseInt($dom.css('left'));
     var top = parseInt($dom.css('top'));
     var width = parseInt($dom.css('width'));
@@ -2221,6 +2354,18 @@
     }
     // 除了上面的其他位置，说明物体在中间的容器范围内
      
+    // 如果两个格子之间的间距小于了格子一半的大小，则对数组进行处理，以便统一后面的处理逻辑
+    if (opt.closeBoxRealHorizontalMargin < opt.closeBoxWidth / 2) {
+      for (var i = 3; i < lineX.length - 1; i += 4) {
+        lineX[i] = lineX[i + 1];
+      }
+    }
+    if (opt.closeBoxRealVerticalMargin < opt.closeBoxHeight / 2) {
+      for (var i = 3; i < lineY.length - 1; i += 4) {
+        lineY[i] = lineY[i + 1];
+      }
+    }
+     
     // 格子的行列变量
     var row = null, col = null;
     // 是否在行列之中变量
@@ -2232,6 +2377,7 @@
         // 则确定列
         if (i == 0) {
           // 如果左侧位置在第一条分割线的左边(上方条件)
+          // debugger
           return {
             pos: 'over'
           }
@@ -2241,6 +2387,7 @@
           // 左上顶点是否在格子中(1、2,5、6,9、10...在之中)
           isEnterCol = Math.floor((i + 1) / 2) % 2 !== 0;
         }
+        break;
       }
     }
     for (var i = 0; i < lineY.length; i++) {
@@ -2249,6 +2396,7 @@
         // 如果当前位置在横向分割线的上边(上方条件)
         // 则确定行
         if (i == 0) {
+          // debugger
           return {
             pos: 'over'
           }
@@ -2258,12 +2406,14 @@
           // 左上顶点是否在格子中(1、2,5、6,9、10...在之中)
           isEnterRow = Math.floor((i + 1) / 2) % 2 !== 0;
         }
+        break;
       }
     }
 
-    var sizeInfo = parseSizeInfo(data.size);
+    var sizeInfo = parseSizeInfo(size);
     // 判断当前物体有没有超出当前容器
-    if (row + sizeInfo.row >= opt.verSize || col + sizeInfo.col >= opt.horSize) {
+    if (row + sizeInfo.row > opt.verSize || col + sizeInfo.col > opt.horSize) {
+      // debugger
       // 如果容器超出当前容器
       return {
         pos: 'over'
@@ -2274,7 +2424,7 @@
     var locations = [];
     for (var i = 0; i < sizeInfo.row; i++) {
       for (var j = 0; j < sizeInfo.col; j++) {
-        locations.push(getLocationKey(currentPageIndex, row + i, col + j));
+        locations.push(createLocation(currentPageIndex, row + i, col + j));
       }
     }
 
@@ -2282,6 +2432,7 @@
     return {
       row: row,
       col: col,
+      location: createLocation(currentPageIndex, row, col),
       pos: 'center',
       locations: locations,
       isEnter: isEnterRow && isEnterCol
@@ -2289,28 +2440,379 @@
   }
 
   /**
-   * [getOccupiedLocation 获得当前移动位置需要占据的位置]
+   * [moveToLocation 向opt中的data中添加tempLocation]
    * @param  {[type]} $dom [description]
    * @param  {[type]} data [description]
    * @return {[type]}      [description]
    */
-  function getOccupiedLocation($dom, data) {
-    var locationObj = getMoveFirstPointLocation($dom);
-    var locations = [];
-    if (locationObj.pos == 'bottom' || locationObj.pos == 'right' || locationObj.pos == 'top') {
-      return {
-        pos: locationObj.pos,
-        locations: locations
+  function moveToLocation($dom, domData, data, opt) {
+    var moveLocation = getMoveLocation($dom, domData.size, opt);
+    var pos = moveLocation.pos;
+    if (pos === 'left') {
+      // 如果向左翻页(上方条件)
+      // TODO
+    } else if (pos === 'right') {
+      // 如果向右翻页(上方条件)
+      // TODO
+    } else if (pos === 'top' || pos === 'bottom' || pos === 'over') {
+      // 如果是在上方或是下方或是超过中央容器(上方条件)
+      // 则不处理
+    } else {
+      // 如果物体完全在中央容器内(上方条件)
+      // 则计算新的data
+      if (domData.location === moveLocation.location) {
+        // 还没有移出当前格子(上方条件)
+      } else if (domData.img) {
+        // 如果移动的物体是一个图标(上方条件)
+        // 图标都是1x1
+        if (moveLocation.isEnter) {
+          // 如果是移入状态(上方条件)
+          
+        } else {
+          // 如果是在前方的状态(上方条件)
+          // 则判断移动物体与相关物体的前后关系
+          moveIconOrBox(domData, data, moveLocation, opt);
+        }
+      } else if (domData.type === 'tool') {
+        // 如果移动的物体是一个工具(上方条件)
+        // 在前方的状态与在一起的状态处理相同
+        // 则判断移动物体与相关物体的前后关系
+        moveTool(domData, data, moveLocation, opt);
+      } else {
+        // 如果移动的物体是一个盒子(上方条件)
+        // 盒子都是1x1
+        
+        // 在前方的状态与在一起的状态处理相同
+        // 则判断移动物体与相关物体的前后关系
+        moveIconOrBox(domData, data, moveLocation, opt);
       }
-    } else if (locationObj.pos == 'left') {
-      // 当左上角点位置在左边时(上方条件)
-      // 判断
     }
-    var sizeInfo = parseSizeInfo(data.size);
-    return {
-      pos: '', // top, bottom, left, right, over, center
-      locations: locations
+  }
+
+  /**
+   * [moveIconOrBox 移动图标或盒子的方法]
+   * @param  {[type]} domData      [description]
+   * @param  {[type]} data         [description]
+   * @param  {[type]} moveLocation [description]
+   * @param  {[type]} opt          [description]
+   * @return {[type]}              [description]
+   */
+  function moveIconOrBox(domData, data, moveLocation, opt) {
+    var moveIndex = getIndexByLocation(domData.location, data);
+    var relativeIndex = getIndexByLocation(moveLocation.location, data);
+    var moveFinalIndex;
+    data[moveIndex].$dom.insertBefore(data[relativeIndex].$dom);
+    if (moveIndex < relativeIndex) {
+      // 移动物体在前(上方条件)
+      data.splice(relativeIndex, 0, domData);
+      data.splice(moveIndex, 1);
+      moveFinalIndex = relativeIndex - 1;
+    } else {
+      // 移动物体在后(上方条件)
+      data.splice(moveIndex, 1);
+      data.splice(relativeIndex, 0, domData);
+      moveFinalIndex = relativeIndex;
     }
+    fillLocation(data, opt);
+    animateDoms(data, opt, moveFinalIndex);
+  }
+
+  /**
+   * [moveTool 移动工具的方法]
+   * @param  {[type]} domData      [description]
+   * @param  {[type]} data         [description]
+   * @param  {[type]} moveLocation [description]
+   * @param  {[type]} opt          [description]
+   * @return {[type]}              [description]
+   */
+  function moveTool(domData, data, moveLocation, opt) {
+    var moveIndex = getIndexByLocation(domData.location, data);
+    var relativeIndex = getIndexByLocation(moveLocation.location, data);
+    var moveFinalIndex;
+    data[moveIndex].$dom.insertBefore(data[relativeIndex].$dom);
+    if (moveIndex < relativeIndex) {
+      // 移动物体在前(上方条件)
+      data.splice(relativeIndex, 0, domData);
+      data.splice(moveIndex, 1); 
+      moveFinalIndex = getIndexByLocation(moveLocation.location, data) - 1;
+    } else {
+      // 移动物体在后(上方条件)
+      data.splice(moveIndex, 1);
+      data.splice(relativeIndex, 0, domData);
+      moveFinalIndex = getIndexByLocation(moveLocation.location, data);
+    }
+
+    var locationObj = opt.locationObj;
+    // 清除工具原来位置的占用信息
+    var occupiedLocations = getOccupiedLocations(domData.location, domData.size);
+    for (var i = 0; i < occupiedLocations.length; i++) {
+      var element = occupiedLocations[i];
+      delete locationObj[element];
+    }
+
+    // 清除掉移动工具需要占用的位置的位置信息
+    for (var i = 0; i < moveLocation.locations.length; i++) {
+      var element = moveLocation.locations[i];
+      // 查询这些位置对应的data中的数据
+      var dData = getDataByLocation(element, opt.data);
+      if (dData) {
+        // 删除这些data数据对应的location信息
+        delete dData.location;
+      }
+      // 查询该位置所属物体占用的位置
+      if (locationObj[element]) {
+        var oLocations = getOccupiedLocations(locationObj[element].location, locationObj[element].size);
+        // 去掉这些占用位置
+        for (var j = 0; j < oLocations.length; j++) {
+          var ele = oLocations[j];
+          delete locationObj[ele];
+        }
+      }
+      // 加上移动工具占用的位置
+      locationObj[element] = createLocationRelativeInfo(moveLocation.location, domData.size);
+    }
+
+    // 修改移动工具对应数据的位置信息
+    domData.location = moveLocation.location;
+
+    // debugger
+    // 填充删除的位置信息与占用信息
+    fillOtherLocation(data, opt);
+    animateDoms(data, opt, getIndexByLocation(moveLocation.location, data));
+  }
+
+  /**
+   * [isFirstDomBefore 是否第一个节点在前面]
+   * @param  {[type]}  location1 [description]
+   * @param  {[type]}  location2 [description]
+   * @return {Boolean}           [description]
+   */
+  function isFirstDomBefore(location1, location2) {
+    var locationInfo1 = parseLocationInfo(location1);
+    var locationInfo2 = parseLocationInfo(location2);
+    if (locationInfo1.row < location2.row) {
+      return true;
+    } else if (locationInfo1.row > location2.row) {
+      return false;
+    } else if (locationInfo1.col < location2.col) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  /**
+   * [animateDoms 动画移动所有节点]
+   * @param  {[type]} data [description]
+   * @param  {[type]} opt  [description]
+   * @return {[type]}      [description]
+   */
+  function animateDoms(data, opt, excludeIndex) {
+    for (var i = 0; i < data.length; i++) {
+      var element = data[i];
+      var $dom = element.$dom;
+      var location = element.location;
+      if (i === excludeIndex) {
+        showToLocation(opt.moveIconObj.$flagDom, location, opt);
+      } else {
+        animateToLocation($dom, location, opt);
+      }
+    }
+  }
+
+  /**
+   * [animateToLocation 动画移动到指定位置]
+   * @param  {[type]} $dom     [description]
+   * @param  {[type]} location [description]
+   * @param  {[type]} opt      [description]
+   * @return {[type]}          [description]
+   */
+  function animateToLocation($dom, location, opt) {
+    var locationInfo = parseLocationInfo(location);
+    var locationPoint = getLocationPoint(locationInfo.row, locationInfo.col, opt);
+    $dom.animate({
+      'left': locationPoint.x + 'px',
+      'top': locationPoint.y + 'px'
+    });
+  }
+
+  function showToLocation($dom, location, opt) {
+    var locationInfo = parseLocationInfo(location);
+    var locationPoint = getLocationPoint(locationInfo.row, locationInfo.col, opt);
+    $dom.css({
+      'left': locationPoint.x + 'px',
+      'top': locationPoint.y + 'px'
+    });
+  }
+
+  /**
+   * [getIndexByLocation 根据位置信息查询在data中的序数]
+   * @param  {[type]} location [description]
+   * @param  {[type]} data     [description]
+   * @return {[type]}          [description]
+   */
+  function getIndexByLocation(location, data) {
+    for (var i = 0; i < data.length; i++) {
+      var element = data[i];
+      if (element.location === location) {
+        return i;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * [getDataByLocation 根据位置信息查询对应数据]
+   * @param  {[type]} location [description]
+   * @param  {[type]} data     [description]
+   * @return {[type]}          [description]
+   */
+  function getDataByLocation(location, data) {
+    for (var i = 0; i < data.length; i++) {
+      var element = data[i];
+      if (element.location === location) {
+        return element;
+      }
+    }
+    return null;
+  }
+
+  /**
+   * [getNearestPrevLocation 获得对应位置最近的前一个位置]
+   * @param  {[type]} location [description]
+   * @param  {[type]} opt      [description]
+   * @return {[type]}          [description]
+   */
+  function getNearestPrevLocation(location, opt) {
+    // 每页的行列
+    var row = opt.verSize;
+    var col = opt.horSize;
+    // 位置的页序数行列
+    var locationInfo = parseLocationInfo(location);
+    var page = locationInfo.page;
+    var r = locationInfo.row;
+    var c = locationInfo.col;
+    var locationObj = opt.locationObj;
+    for (var i = r; i >= 0; i--) {
+      var j = (i === r) ? c - 1 : col - 1;
+      for (; j >= 0; j--) {
+        var loc = createLocation(page, i, j);
+        var locationRelativeInfo = locationObj[loc];
+        if (locationRelativeInfo.location === loc) {
+          return loc;
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * [addMoveLocation 添加一条移动位置记录]
+   * @param {[type]} moveLocation [description]
+   * @param {[type]} opt          [description]
+   */
+  function addMoveLocation(moveLocation, opt) {
+    var moveLocations = opt.moveLocations;
+    if (moveLocations.length >= opt.moveLocationMaxLength) {
+      // 如果移动位置记录不小于2(上方条件)
+      // 则先去掉最早的记录
+      moveLocations.shift();
+    }
+    // 添加新记录
+    moveLocations.push(moveLocations);
+  }
+
+  /**
+   * [clearMoveLocation 清空移动位置记录]
+   * @param  {[type]} opt [description]
+   * @return {[type]}     [description]
+   */
+  function clearMoveLocation(opt) {
+    var moveLocations = opt.moveLocations;
+    moveLocations.length = 0;
+  }
+
+  /**
+   * [isMoveLocationActive 当前移动位置是否生效。如果生效，则清空移动位置记录]
+   * @param  {[type]}  moveLocation [description]
+   * @param  {[type]}  opt          [description]
+   * @return {Boolean}              [description]
+   */
+  function isMoveLocationActive(moveLocation, opt) {
+    addMoveLocation(moveLocation, opt);
+    var isAllSame = isAllMoveLocationsSame(opt.moveLocations, opt);
+    // 移动位置相同时，将会清空移动位置记录，用于之后重新比较
+    if (isAllSame) {
+      clearMoveLocation(opt);
+    }
+    return isAllSame;
+  }
+
+  /**
+   * [isAllMoveLocationsSame 判断是否所有的移动位置都相同。移动位置记录不足moveLocationMaxLength时，算不相同]
+   * @param  {[type]}  moveLocations [description]
+   * @param  {[type]}  opt           [description]
+   * @return {Boolean}               [description]
+   */
+  function isAllMoveLocationsSame(moveLocations, opt) {
+    // 移动位置记录不够moveLocationMaxLength时都算不相同
+    if (moveLocations.length < opt.moveLocationMaxLength) {
+      return false;
+    }
+    var temp;
+    var isAllSame = true;
+    for (var i = 0; i < moveLocations.length; i++) {
+      var element = moveLocations[i];
+      if (i === 0) {
+        temp = element;
+      } else {
+        if (!isMoveLocationsSame(temp, element)) {
+          isAllSame = false;
+          break;
+        }
+      }
+    }
+    return isAllSame;
+  }
+
+  /**
+   * [isMoveLocationsSame 判断两个移动位置(移动物体的左上方点所在位置)是否相同]
+   * @param  {[type]}  moveLocation1 [description]
+   * @param  {[type]}  moveLocation2 [description]
+   * @return {Boolean}               [description]
+   */
+  function isMoveLocationsSame(moveLocation1, moveLocation2) {
+    if (moveLocation1.pos !== moveLocation2.pos) {
+      return false;
+    }
+    // 经过上方条件，此时两个pos相同
+    if (moveLocation1.pos !== 'center') {
+      return true;
+    }
+    // 经过上方条件，此时pos为center
+    if (moveLocation1.row === moveLocation2.row && moveLocation1.col === moveLocation2.col
+      && moveLocation1.isEnter === moveLocation2.isEnter) {
+      return true;
+    }
+    return false;
+  }
+
+  /**
+   * [getOccupiedLocations 根据位置与大小获取占用的位置]
+   * @param  {[type]} location [description]
+   * @param  {[type]} size     [description]
+   * @return {[type]}          [description]
+   */
+  function getOccupiedLocations(location, size) {
+    var locationInfo = parseLocationInfo(location);
+    var sizeInfo = parseSizeInfo(size);
+    var occupiedLocations = [];
+    for (var i = 0; i < sizeInfo.row; i++) {
+      for (var j = 0; j < sizeInfo.col; j++) {
+        occupiedLocations.push(createLocation(locationInfo.page, locationInfo.row + i, locationInfo.col + j));
+      }
+    }
+    return occupiedLocations;
   }
 
   // 点击图标标题可编辑，写在这里主要用于阻止冒泡
