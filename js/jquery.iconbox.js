@@ -2111,7 +2111,7 @@
           data.unshift(element);
           locIndex = 0;
         } else {
-          locIndex = getIndexByLocation(loc, data) + 1;
+          locIndex = getIndexByLocation(loc, data, opt) + 1;
           if (locIndex < i) {
             // 如果是向前移动(上方条件)，则删除当前位置，插入前方位置
             data.splice(i, 1);
@@ -2131,7 +2131,7 @@
           $dom.insertBefore(data[1].$dom);
           console.log('insertBefore: ' + locIndex)
         } else {
-          locIndex = getIndexByLocation(loc, data) + 1;
+          locIndex = getIndexByLocation(loc, data, opt) + 1;
           $dom.insertAfter(data[locIndex - 1].$dom);
           console.log('insertAfter: ' + locIndex)
         }
@@ -2238,68 +2238,131 @@
     var row = sizeInfo.row;
     var col = sizeInfo.col;
     // 用于存储占用位置的数组
-    var arrLocation = [];
+    var locations;
     // 最大循环次数，避免死循环，循环十次依然找不到则认为没有足够的空间可以放置内容
     var maxCycleTimes = 10;
     // 当前循环次数
     var curCycleTimes = 0;
     outer:
     while (curCycleTimes < maxCycleTimes) {
-      breakPage:
-      for (var i = 0; i < opt.verSize; i++) {
-        var arrLocation = [];
-        breakRow:
-        for (var j = 0; j < opt.horSize; j++) {
-          // l页数_行数_列数
-          location = createLocation(pageIndex, i, j);
-          if (!locationObj[location] || !locationObj[location].isOccupied) {
-            arrLocation.push(location);
-            // 第一个空位置(上方条件)
-            // 循环行尺寸，从0开始，即1x时会有一行循环
-            for (var ii = 0; ii < row; ii++) {
-              var curRow = i + ii;
-              if (curRow >= opt.verSize) {
-                // 如果超出了最大行数(上方条件)
-                // 则进入到下一页
-                curCycleTimes++;
-                break breakPage;
-              }
-              // 循环列尺寸，从0开始，即nx时会有n次循环
-              for (var jj = 0; jj < col; jj++) {
-                // 第一个位置去掉判断，因为第一个位置为空时才能进来
-                if (ii == 0 && jj == 0) {
-                  continue;
-                }
-                // 则首先判断该尺寸一行的大小是否合适
-                var curCol = j + jj;
-                var locationKey = createLocation(pageIndex, curRow, curCol);
-                if (curCol >= opt.horSize || (locationObj[locationKey] && locationObj[locationKey].isOccupied)) {
-                  // 如果超出了最大列数或者该位置有东西占用了(上方条件)
-                  // 则跳出列循环，进入到下一行的判断
-                  curCycleTimes++;
-                  break breakRow;
-                } else {
-                  // 如果是空的(上方条件)
-                  // 则加入位置数组
-                  arrLocation.push(locationKey);
-                }
-              }
-            }
-            break outer;
-          }
-        }
+      // breakPage:
+      // for (var i = 0; i < opt.verSize; i++) {
+      //   var arrLocation = [];
+      //   breakRow:
+      //   for (var j = 0; j < opt.horSize; j++) {
+      //     // l页数_行数_列数
+      //     location = createLocation(pageIndex, i, j);
+      //     if (!locationObj[location] || !locationObj[location].isOccupied) {
+      //       arrLocation.push(location);
+      //       // 第一个空位置(上方条件)
+      //       // 循环行尺寸，从0开始，即1x时会有一行循环
+      //       for (var ii = 0; ii < row; ii++) {
+      //         var curRow = i + ii;
+      //         if (curRow >= opt.verSize) {
+      //           // 如果超出了最大行数(上方条件)
+      //           // 则进入到下一页
+      //           curCycleTimes++;
+      //           break breakPage;
+      //         }
+      //         // 循环列尺寸，从0开始，即nx时会有n次循环
+      //         for (var jj = 0; jj < col; jj++) {
+      //           // 第一个位置去掉判断，因为第一个位置为空时才能进来
+      //           if (ii == 0 && jj == 0) {
+      //             continue;
+      //           }
+      //           // 则首先判断该尺寸一行的大小是否合适
+      //           var curCol = j + jj;
+      //           var locationKey = createLocation(pageIndex, curRow, curCol);
+      //           if (curCol >= opt.horSize || (locationObj[locationKey] && locationObj[locationKey].isOccupied)) {
+      //             // 如果超出了最大列数或者该位置有东西占用了(上方条件)
+      //             // 则跳出列循环，进入到下一行的判断
+      //             curCycleTimes++;
+      //             break breakRow;
+      //           } else {
+      //             // 如果是空的(上方条件)
+      //             // 则加入位置数组
+      //             arrLocation.push(locationKey);
+      //           }
+      //         }
+      //       }
+      //       break outer;
+      //     }
+      //   }
+      // }
+      // pageIndex++;
+      locations = getLocationsByPage(pageIndex++, row, col, opt);
+      if (locations.length) {
+        break;
+      } else {
+        curCycleTimes++;
       }
-      pageIndex++;
     }
     if (curCycleTimes >= maxCycleTimes) {
       // 如果循环次数达到了最大循环次数，即找不到足够大小放置工具(上方条件)
       return null;
     }
     // 匹配到空位置之后，把需要占用的位置存入locationObj中
-    for (var i = 0; i < arrLocation.length; i++) {
-      locationObj[arrLocation[i]] = createLocationRelativeInfo(location, size);
+    for (var i = 0; i < locations.length; i++) {
+      locationObj[locations[i]] = createLocationRelativeInfo(locations[0], size);
     }
-    return location;
+    return locations[0];
+  }
+
+  /**
+   * [getLocationsByPage 获得对应页数位置占用情况]
+   * @param  {[type]} page    [description]
+   * @param  {[type]} rowSpan [description]
+   * @param  {[type]} colSpan [description]
+   * @param  {[type]} opt     [description]
+   * @return {[type]}         [description]
+   */
+  function getLocationsByPage(page, rowSpan, colSpan, opt) {
+    var locationObj = opt.locationObj;
+    var locations = [];
+    breakPage:
+    for (var i = 0; i < opt.verSize; i++) {
+      breakRow:
+      for (var j = 0; j < opt.horSize; j++) {
+        // l页数_行数_列数
+        var location = createLocation(page, i, j);
+        if (!locationObj[location] || !locationObj[location].isOccupied) {
+          locations.push(location);
+          // 第一个空位置(上方条件)
+          // 循环行尺寸，从0开始，即1x时会有一行循环
+          for (var ii = 0; ii < rowSpan; ii++) {
+            var curRow = i + ii;
+            if (curRow >= opt.verSize) {
+              // 如果超出了最大行数(上方条件)
+              // 则进入到下一页
+              locations = [];
+              break breakPage;
+            }
+            // 循环列尺寸，从0开始，即nx时会有n次循环
+            for (var jj = 0; jj < colSpan; jj++) {
+              // 第一个位置去掉判断，因为第一个位置为空时才能进来
+              if (ii == 0 && jj == 0) {
+                continue;
+              }
+              // 则首先判断该尺寸一行的大小是否合适
+              var curCol = j + jj;
+              var loc = createLocation(page, curRow, curCol);
+              if (curCol >= opt.horSize || (locationObj[loc] && locationObj[loc].isOccupied)) {
+                // 如果超出了最大列数或者该位置有东西占用了(上方条件)
+                // 则跳出列循环，进入到下一行的判断
+                locations = [];
+                break breakRow;
+              } else {
+                // 如果是空的(上方条件)
+                // 则加入位置数组
+                locations.push(loc);
+              }
+            }
+          }
+          break breakPage;
+        }
+      }
+    }
+    return locations;
   }
 
   function createLocationRelativeInfo(location, size) {
@@ -2498,8 +2561,8 @@
    * @return {[type]}              [description]
    */
   function moveIconOrBox(domData, data, moveLocation, opt) {
-    var moveIndex = getIndexByLocation(domData.location, data);
-    var relativeIndex = getIndexByLocation(moveLocation.location, data);
+    var moveIndex = getIndexByLocation(domData.location, data, opt);
+    var relativeIndex = getIndexByLocation(moveLocation.location, data, opt);
     var moveFinalIndex;
     data[moveIndex].$dom.insertBefore(data[relativeIndex].$dom);
     if (moveIndex < relativeIndex) {
@@ -2526,20 +2589,34 @@
    * @return {[type]}              [description]
    */
   function moveTool(domData, data, moveLocation, opt) {
-    var moveIndex = getIndexByLocation(domData.location, data);
-    var relativeIndex = getIndexByLocation(moveLocation.location, data);
+    var locationObj = opt.locationObj;
+    // 移动物体关联的数据在data中的序数
+    var moveIndex = getIndexByLocation(domData.location, data, opt);
+    // 移动到的位置所在的物体关联的数据在data中的序数
+    var relativeIndex;
+    // debugger
+    if (moveLocation.location !== locationObj[moveLocation.location].location) {
+      // 该位置不是一个左上角位置(上方条件)
+      // 如果移动到的位置没有物体左上角所在(上方条件)，则取该位置后最近的一个左上角位置
+      var sizeInfo = parseSizeInfo(domData.size);
+      var nextLocation = getNearestNextLocation(moveLocation.location, opt, sizeInfo.row, sizeInfo.col);
+      relativeIndex = getIndexByLocation(nextLocation, data, opt);
+    } else {
+      relativeIndex = getIndexByLocation(moveLocation.location, data, opt);
+    }
+    console.log(moveLocation.location + '---' + relativeIndex)
     var moveFinalIndex;
     data[moveIndex].$dom.insertBefore(data[relativeIndex].$dom);
     if (moveIndex < relativeIndex) {
       // 移动物体在前(上方条件)
       data.splice(relativeIndex, 0, domData);
       data.splice(moveIndex, 1); 
-      moveFinalIndex = getIndexByLocation(moveLocation.location, data) - 1;
+      moveFinalIndex = getIndexByLocation(moveLocation.location, data, opt) - 1;
     } else {
       // 移动物体在后(上方条件)
       data.splice(moveIndex, 1);
       data.splice(relativeIndex, 0, domData);
-      moveFinalIndex = getIndexByLocation(moveLocation.location, data);
+      moveFinalIndex = getIndexByLocation(moveLocation.location, data, opt);
     }
 
     var locationObj = opt.locationObj;
@@ -2554,7 +2631,7 @@
     for (var i = 0; i < moveLocation.locations.length; i++) {
       var element = moveLocation.locations[i];
       // 查询这些位置对应的data中的数据
-      var dData = getDataByLocation(element, opt.data);
+      var dData = getDataByLocation(element, opt.data, opt);
       if (dData) {
         // 删除这些data数据对应的location信息
         delete dData.location;
@@ -2578,7 +2655,7 @@
     // debugger
     // 填充删除的位置信息与占用信息
     fillOtherLocation(data, opt);
-    animateDoms(data, opt, getIndexByLocation(moveLocation.location, data));
+    animateDoms(data, opt, getIndexByLocation(moveLocation.location, data, opt));
   }
 
   /**
@@ -2649,12 +2726,19 @@
    * [getIndexByLocation 根据位置信息查询在data中的序数]
    * @param  {[type]} location [description]
    * @param  {[type]} data     [description]
+   * @param  {[type]} opt      [description]
    * @return {[type]}          [description]
    */
-  function getIndexByLocation(location, data) {
+  function getIndexByLocation(location, data, opt) {
+    var locationObj = opt.locationObj;
+    var locationRelativeInfo = locationObj[location];
+    if (!locationRelativeInfo) {
+      return null;
+    }
+    var loc = locationRelativeInfo.location;
     for (var i = 0; i < data.length; i++) {
       var element = data[i];
-      if (element.location === location) {
+      if (element.location === loc) {
         return i;
       }
     }
@@ -2665,12 +2749,19 @@
    * [getDataByLocation 根据位置信息查询对应数据]
    * @param  {[type]} location [description]
    * @param  {[type]} data     [description]
+   * @param  {[type]} opt      [description]
    * @return {[type]}          [description]
    */
-  function getDataByLocation(location, data) {
+  function getDataByLocation(location, data, opt) {
+    var locationObj = opt.locationObj;
+    var locationRelativeInfo = locationObj[location];
+    if (!locationRelativeInfo) {
+      return null;
+    }
+    var loc = locationRelativeInfo.location;
     for (var i = 0; i < data.length; i++) {
       var element = data[i];
-      if (element.location === location) {
+      if (element.location === loc) {
         return element;
       }
     }
@@ -2678,7 +2769,7 @@
   }
 
   /**
-   * [getNearestPrevLocation 获得对应位置最近的前一个位置]
+   * [getNearestPrevLocation 获得对应位置最近的前一个左上角位置]
    * @param  {[type]} location [description]
    * @param  {[type]} opt      [description]
    * @return {[type]}          [description]
@@ -2694,8 +2785,39 @@
     var c = locationInfo.col;
     var locationObj = opt.locationObj;
     for (var i = r; i >= 0; i--) {
+      // 开始行从c - 1列开始，其他行从最后开始
       var j = (i === r) ? c - 1 : col - 1;
       for (; j >= 0; j--) {
+        var loc = createLocation(page, i, j);
+        var locationRelativeInfo = locationObj[loc];
+        if (locationRelativeInfo.location === loc) {
+          return loc;
+        }
+      }
+    }
+    return null;
+  }
+
+  /**
+   * [getNearestNextLocation 获得对应位置最近的后一个左上角位置]
+   * @param  {[type]} location [description]
+   * @param  {[type]} opt      [description]
+   * @return {[type]}          [description]
+   */
+  function getNearestNextLocation(location, opt, rowSpan, colSpan) {
+    // 每页的行列
+    var row = opt.verSize;
+    var col = opt.horSize;
+    // 位置的页序数行列
+    var locationInfo = parseLocationInfo(location);
+    var page = locationInfo.page;
+    var r = locationInfo.row;
+    var c = locationInfo.col;
+    var locationObj = opt.locationObj;
+    for (var i = r; i < row; i++) {
+      // 开始行从c + colSpan开始，其他行从0开始
+      var j = (i === r) ? c + colSpan : 0;
+      for (; j < col; j++) {
         var loc = createLocation(page, i, j);
         var locationRelativeInfo = locationObj[loc];
         if (locationRelativeInfo.location === loc) {
