@@ -6,14 +6,14 @@
   <script type="text/javascript" src="js/jquery-debug.js"></script>
   <script type="text/javascript" src="js/jquery.color-2.1.0.min.js"></script>
   <script type="text/javascript" src="js/jquery.resizediv.js"></script>
-  <script type="text/javascript" src="js/jquery.iconbox.js"></script>
-  <link rel="stylesheet" type="text/css" href="css/iconbox.css">
+  <script type="text/javascript" src="js/jquery.icondesktop.js"></script>
+  <link rel="stylesheet" type="text/css" href="css/icondesktop.css">
 </head>
 <body>
   <div style="width: 100%; height: 588px; margin: 0 auto;" class="icondesktop" id="icondesktop"></div>
   <input type="button" onclick="desktop.refreshIcon();" value="刷新">
   <input type="button" onclick="console.log(desktop.getData());" value="获得数据">
-  <input type="button" onclick="desktop.addIcons({title:'新图标',img:'img/email.png'});" value="新增图标">
+  <input type="button" onclick="desktop.addIcons({title:'新图标',img:'img/email.png',size:'1x1'});" value="新增图标">
   <select>
     <option>ableEditTitle</option>
     <option>ableChecked</option>
@@ -22,7 +22,7 @@
   </select><input type="button" onclick="desktop.switchState($(this).prev().val());" value="切换">
   <input type="button" onclick="console.log(desktop.getIconData({title:'图标就是2',img:'img/email.png'}));" value="查询图标数据">
   <script type="text/javascript">
-    // var desktop = $('#icondesktop').iconbox({
+    // var desktop = $('#icondesktop').icondesktop({
     //   data: [
     //     {
     //       title: '图标就是1',
@@ -33,7 +33,7 @@
     //     }
     //   ]
     // });
-    desktop = $('#icondesktop').iconbox({
+    desktop = $('#icondesktop').icondesktop({
       // desktopVerticalPadding: 50,
       // desktopAutoFill: true,
       // ableEditTitle: true,
