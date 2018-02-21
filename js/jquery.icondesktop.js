@@ -238,7 +238,7 @@
             'backgroundColor': opt.openBoxColor,
             'width': opt.width - opt.openBoxPadding * 2 + 'px',
             'height': opt.height - opt.openBoxPadding * 2 + 'px',
-            'left': '0',
+            'left': opt.currentPageIndex * opt.width + 'px',
             'top': '0',
             'padding': opt.openBoxPadding
           }, function () {
@@ -2415,7 +2415,7 @@
     var moveLocation = getMoveLocation($dom, domData.size, opt);
     var pos = moveLocation.pos;
     if (pos !== 'center') {
-      cancelGroupIcon(opt);
+      cancelGroupAndJoin(opt);
     }
     if (pos === 'left') {
       // 如果向左翻页(上方条件)
@@ -2443,7 +2443,7 @@
       // 则计算新的data
       if (domData.location === moveLocation.location) {
         // 还没有移出当前格子(上方条件)
-        cancelGroupIcon(opt);
+        cancelGroupAndJoin(opt);
       } else if (domData.img) {
         // 如果移动的物体是一个图标(上方条件)
         if (moveLocation.isEnter) {
@@ -2453,15 +2453,17 @@
             // 如果该位置为空(上方条件)，则直接移动过来
             moveTool(domData, data, moveLocation, opt);
           } else if (theData.img) {
-            // 如果是图标(上方条件)，则合并组
+            // 如果是图标(上方条件)，则显示放大的盒子背景
             // groupIcons(domData, data, moveLocation, opt);
+            cancelJoinBox(opt);
             showGroupBox(theData.$dom, opt);
           } else if (theData.type === 'tool') {
             // 如果是工具(上方条件)，则移动
             moveIconOrBox(domData, data, moveLocation, opt);
           } else {
-            // 除了图标、工具，就剩下盒子(上方条件)，则加入到盒子中
-            
+            // 除了图标、工具，就剩下盒子(上方条件)，则盒子放大
+            cancelGroupIcons(opt);
+            enlargeBox(theData.$dom, opt);
           }
         } else {
           // 如果是在前方的状态(上方条件)
@@ -2483,17 +2485,46 @@
   }
 
   /**
-   * [cancelGroupIcon 取消图标组合]
+   * [cancelGroupIcons 取消图标组合]
    * @param  {[type]} opt [description]
    * @return {[type]}     [description]
    */
-  function cancelGroupIcon(opt) {
+  function cancelGroupIcons(opt) {
     var moveIconObj = opt.moveIconObj;
+    // 隐藏放大盒子背景
+    moveIconObj.$closeBoxBackground.hide();
+  }
+
+  function cancelJoinBox(opt) {
+    var moveIconObj = opt.moveIconObj;
+    var $prevIconBelow = moveIconObj.$prevIconBelow;
+    if ($prevIconBelow.hasClass('iconbox__close') && $prevIconBelow.attr('prevLeft')) {
+      // 如果是盒子，并且记录有之前的位置信息(上方条件)，则恢复
+      $prevIconBelow.stop().css({
+        'left': $prevIconBelow.attr('prevLeft'),
+        'top': $prevIconBelow.attr('prevTop'),
+        'padding': opt.closeBoxPadding + 'px'
+      });
+      // 恢复后清除位置记录
+      $prevIconBelow.attr({
+        'prevLeft': '',
+        'top': ''
+      });
+    }
+  }
+
+  function showFlagDom(opt) {
+    var moveIconObj = opt.moveIconObj;
+    // 清空前一个被遮挡的节点，因为该值只有在移入可能发生组合的时候才会发生改变，避免移出后发生组合
     moveIconObj.$prevIconBelow = moveIconObj.$empty;
     // 显示移动指示物
     moveIconObj.$flagDom.show();
-    // 隐藏放大盒子背景
-    moveIconObj.$closeBoxBackground.hide();
+  }
+
+  function cancelGroupAndJoin(opt) {
+    cancelGroupIcons(opt);
+    cancelJoinBox(opt);
+    showFlagDom(opt);
   }
 
   /**
@@ -2505,7 +2536,7 @@
    * @return {[type]}              [description]
    */
   function moveIconOrBox(domData, data, moveLocation, opt) {
-    cancelGroupIcon(opt);
+    cancelGroupAndJoin(opt);
     opt.locationObj = {};
     opt.locationObj[moveLocation.location] = createLocationRelativeInfo(moveLocation.location, domData.size);
     clearDataLocation(data);
@@ -2531,26 +2562,7 @@
    * @return {[type]}              [description]
    */
   function moveTool(domData, data, moveLocation, opt) {
-    // var mr = getMoveIndexAndRelativeIndex(domData, data, moveLocation, opt);
-    // var moveIndex = mr.moveIndex;
-    // var relativeIndex = mr.relativeIndex;
-    // var moveFinalIndex;
-    // if (relativeIndex == -1) {
-    //   data.splice(moveIndex, 1);
-    //   data.push(domData);
-    //   moveFinalIndex = data.length - 1;
-    // } else if (moveIndex < relativeIndex) {
-    //   // 移动物体在前(上方条件)
-    //   data.splice(relativeIndex, 0, domData);
-    //   data.splice(moveIndex, 1); 
-    //   moveFinalIndex = getIndexByLocation(moveLocation.location, data, opt) - 1;
-    // } else {
-    //   // 移动物体在后(上方条件)
-    //   data.splice(moveIndex, 1);
-    //   data.splice(relativeIndex, 0, domData);
-    //   moveFinalIndex = getIndexByLocation(moveLocation.location, data, opt);
-    // }
-    cancelGroupIcon(opt);
+    cancelGroupAndJoin(opt);
     var locationObj = opt.locationObj;
     // 清除工具原来位置的占用信息
     var occupiedLocations = getOccupiedLocations(domData.location, domData.size);
@@ -2593,6 +2605,12 @@
     animateDoms(data, opt, getIndexByLocation(moveLocation.location, data, opt));
   }
 
+  /**
+   * [showGroupBox 显示放大的盒子背景]
+   * @param  {[type]} $iconBelow [description]
+   * @param  {[type]} opt        [description]
+   * @return {[type]}            [description]
+   */
   function showGroupBox($iconBelow, opt) {
     var moveIconObj = opt.moveIconObj;
     var $closeBoxBackground = moveIconObj.$closeBoxBackground;
@@ -2614,6 +2632,40 @@
         'top': parseInt($iconBelow.css('top')) - moveIconObj.closeBoxEnlargeHeight + 'px',
         'width': opt.closeBoxWidth + moveIconObj.closeBoxEnlargeWidth * 2 + 'px',
         'height': opt.closeBoxHeight + moveIconObj.closeBoxEnlargeHeight * 2 + 'px'
+      }, 'fast');
+    }
+    moveIconObj.$prevIconBelow = $iconBelow;
+  }
+
+  /**
+   * [enlargeBox 放大盒子]
+   * @param  {[type]} $iconBelow [description]
+   * @param  {[type]} opt        [description]
+   * @return {[type]}            [description]
+   */
+  function enlargeBox($iconBelow, opt) {
+    var iconLeft = parseInt($iconBelow.css('left'));
+    var iconTop = parseInt($iconBelow.css('top'));
+    var iconWidth = parseInt($iconBelow.css('width'));
+    var iconHeight = parseInt($iconBelow.css('height'));
+    // var iconWidthChange = Math.ceil(iconWidth * opt.closeBoxEnlargeScale);
+    // var iconHeightChange = Math.ceil(iconHeight * opt.closeBoxEnlargeScale);
+    var moveIconObj = opt.moveIconObj;
+    // 隐藏指示位置图标
+    moveIconObj.$flagDom.hide();
+    moveIconObj.$iconBelow = $iconBelow;
+    if (!$iconBelow.attr('prevLeft')) {
+      // 如果盒子没有放大，即没有原始位置记录(上方条件)
+      // 则先记录盒子的当前状态，然后再变换，便于恢复
+      $iconBelow.attr({
+        'prevLeft': iconLeft + 'px',
+        'prevTop': iconTop + 'px',
+        'prevWidth': iconWidth + 'px',
+        'prevHeight': iconHeight + 'px'
+      }).animate({
+        'left': iconLeft - moveIconObj.closeBoxEnlargeWidth + 'px',
+        'top': iconTop - moveIconObj.closeBoxEnlargeHeight + 'px',
+        'padding': opt.closeBoxPadding + moveIconObj.closeBoxEnlargeWidth + 'px'
       }, 'fast');
     }
     moveIconObj.$prevIconBelow = $iconBelow;
