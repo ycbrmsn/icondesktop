@@ -34,8 +34,8 @@
  *   1.6.0 2018-01-27 新增根据图标的一个属性或多个属性数据来查询该图标的具体数据的方法
  *   1.6.1 2018-01-30 修改jquery1.8.3版本下打开盒子后隐藏图标未显示的问题
  *   1.6.2 2018-01-30 修改盒子交换后节点未进行移动导致数据错误的问题
- *   2.0.0 插件名称由iconbox改为icondesktop，划分桌面区域，增加桌面工具，桌面工具在桌面上放不下时将不会显示出来，调整一行或一列时的图标位置，
- *     桌面大小变化时调整图标位置，图标/盒子/工具皆可调换位置，移动时可在不同页移动
+ *   2.0.0 插件名称由iconbox改为icondesktop，划分桌面区域，增加桌面工具，桌面工具在桌面上放不下时将不会显示出来，
+ *     调整一行或一列时的图标位置，桌面大小变化时调整图标位置，图标/盒子/工具皆可调换位置，移动时可在不同页移动
  */
 ;(function (factory) {
   if (typeof define === "function" && define.amd) {
@@ -494,7 +494,6 @@
       });
       // 右键菜单
       this.oncontextmenu = function (e) {
-        console.log(e)
         var e = e || window.event;
         console.log(e)
         return false;//取消右键点击的默认事件
@@ -1236,28 +1235,16 @@
         var $iconBelow = moveIconObj.$iconBelow;
         // if (moveIconObj.isSuspended && $iconBelow) {
         if (moveIconObj.$prevIconBelow === $iconBelow) {
-          // 如果拖动盒子/图标并且处于悬浮状态(上方条件)
-          // if ($this.hasClass('iconbox__close')) {
-          //   // 如果被拖动物体是一个盒子(上方条件)
-          //   // 则交换位置
-          //   exchangeData(opt.data, getIconIndex($this, opt), getIconIndex($iconBelow, opt));
-          //   exchangeDoms($this, $iconBelow, opt);
-          //   moveFlag = 1;
-          // } else if ($this.hasClass('iconbox-tool')) {
-          //   // 如果被拖动物体是一个工具(上方条件)，则不处理什么
-          // } else {
-          
-            // 如果被拖动物体是一个图标(上方条件)
-            // 则进行分组
-            var dstData = groupData(opt.data, getIconIndex($this, opt), getIconIndex($iconBelow, opt));
-            // 此处$this与$iconBelow被删除重新创建，所以重新赋值
-            $groupObj = groupDoms($this, $iconBelow, opt, dstData);
-            $this = $groupObj.$this;
-            $iconBelow = $groupObj.$iconBelow;
-            recoverIconBelow($this, opt);
-            moveFlag = 2;
+          // 如果拖动盒子/图标与上一个状态均在同一个盒子/图标上(上方条件)
+          // 则进行分组
+          var dstData = groupData(opt.data, getIconIndex($this, opt), getIconIndex($iconBelow, opt));
+          // 此处$this与$iconBelow被删除重新创建，所以重新赋值
+          $groupObj = groupDoms($this, $iconBelow, opt, dstData);
+          $this = $groupObj.$this;
+          $iconBelow = $groupObj.$iconBelow;
+          recoverIconBelow($this, opt);
+          moveFlag = 2;
 
-          // }
         } else {
           // 如果不是(上方条件)
           // 则还原
@@ -1360,39 +1347,26 @@
    * @return {[type]}            [description]
    */
   function recoverIconBelow($this, opt, onlyEffect) {
-    var moveIconObj = opt.moveIconObj;
-    // 隐藏悬浮在图标上时出现的盒子背景
-    moveIconObj.$closeBoxBackground.hide();
-    // 盒子背景还原
-    // $this.parents('.icondesktop-slide').find('.iconbox__close').each(function (index, element) {
-    //   if ($(this).attr('prevLeft')) {
-    //     $(this).stop().css({
-    //       'left': $(this).attr('prevLeft'),
-    //       'top': $(this).attr('prevTop'),
-    //       'padding': opt.closeBoxPadding + 'px'
-    //     })/*.attr({
-    //       'prevLeft': '',
-    //       'prevTop': ''
-    //     })*/;
-    //   }
-    // });
-    var $prevIconBelow = moveIconObj.$prevIconBelow;
-    if ($prevIconBelow.hasClass('iconbox__close') && $prevIconBelow.attr('prevLeft')) {
-      // 如果是盒子，并且记录有之前的位置信息，则恢复
-      $prevIconBelow.stop().css({
-        'left': $prevIconBelow.attr('prevLeft'),
-        'top': $prevIconBelow.attr('prevTop'),
-        'padding': opt.closeBoxPadding + 'px'
-      });
-    }
+    // // 隐藏悬浮在图标上时出现的盒子背景
+    // moveIconObj.$closeBoxBackground.hide();
+    // // 盒子背景还原
+    // var $prevIconBelow = moveIconObj.$prevIconBelow;
+    // if ($prevIconBelow.hasClass('iconbox__close') && $prevIconBelow.attr('prevLeft')) {
+    //   // 如果是盒子，并且记录有之前的位置信息，则恢复
+    //   $prevIconBelow.stop().css({
+    //     'left': $prevIconBelow.attr('prevLeft'),
+    //     'top': $prevIconBelow.attr('prevTop'),
+    //     'padding': opt.closeBoxPadding + 'px'
+    //   });
+    // }
+    cancelGroupIcons(opt);
+    cancelJoinBox(opt);
     if (!onlyEffect) {
+      var moveIconObj = opt.moveIconObj;
       moveIconObj.$prevIconBelow = moveIconObj.$empty;
-      moveIconObj.isSuspended = false;
+      // moveIconObj.isSuspended = false;
+      // showFlagDom(opt);
     }
-  }
-
-  function getSeparateLocations($dom) {
-    
   }
 
   /**
@@ -1558,7 +1532,7 @@
    */
   function groupDoms($this, $iconBelow, opt, newData) {
     if ($iconBelow.hasClass('iconbox-a')) {
-      // 在一个图标上，并且拖动物体不是盒子，则两个组合成一个盒子
+      // 在一个图标上，并且拖动物体不是盒子(上方条件)，则两个组合成一个盒子
       var $newIconBox = constructBox(opt, newData);
       setBoxStyle($newIconBox, opt);
       setTitleStyle($newIconBox, opt);
@@ -1576,7 +1550,7 @@
       $this = $newIconBox.children('.iconbox-a').eq(1);
       $temp.remove();
     } else {
-      // 在一个盒子上，则加入到盒子里
+      // 在一个盒子上(上方条件)，则加入到盒子里
       // 改成小图标样式
       $this.css({
         'cursor': '',
@@ -2082,6 +2056,7 @@
   function fillOtherLocation(data, opt) {
     var locationObj = opt.locationObj;
     var pageIndex = 0;
+    var filledLocations = [];
 
     // debugger
     for (var i = 0; i < data.length; i++) {
@@ -2090,6 +2065,7 @@
       if (!element.location) {
         // 如果位置信息不存在时(上方条件)，则补上位置信息
         element.location = getFirstEmptyLocation(elementSize, opt);
+        filledLocations.push(element.location);
         // 如果数据关联了dom节点，则修改dom节点的位置信息记录
         if (element.$dom) {
           setLocationAttr(element.$dom, element.location);
@@ -2106,6 +2082,26 @@
 
     // 总页数为页序数+1
     opt.pages = pageIndex + 1;
+
+    return filledLocations;
+  }
+
+  /**
+   * [isLocationsNotOnePage 是否有位置不在同一页]
+   * @param  {[type]}  page      [description]
+   * @param  {[type]}  locations [description]
+   * @return {Boolean}           [description]
+   */
+  function isLocationsNotOnePage(page, locations) {
+    for (var i = 0; i < locations.length; i++) {
+      var element = locations[i];
+      var locationInfo = parseLocationInfo(element);
+      if (page !== locationInfo.page) {
+        // 如果位置页数有不是同一页的(上方条件)，则返回true
+        return true;
+      }
+    }
+    return false;
   }
 
   /**
@@ -2593,6 +2589,9 @@
       locationObj[element] = createLocationRelativeInfo(moveLocation.location, domData.size);
     }
 
+    // 移动工具原始位置信息
+    var domLocationInfo = parseLocationInfo(domData.location);
+
     // 修改移动工具对应数据的位置信息
     domData.location = moveLocation.location;
     setLocationAttr(domData.$dom, domData.location);
@@ -2600,9 +2599,16 @@
     // debugger
     var pages = opt.pages;
     // 填充删除的位置信息与占用信息
-    fillOtherLocation(data, opt);
-    adjustPageBox(domData.$dom, pages, opt.pages);
-    animateDoms(data, opt, getIndexByLocation(moveLocation.location, data, opt));
+    var filledLocations = fillOtherLocation(data, opt);
+    if (isLocationsNotOnePage(domLocationInfo.page, filledLocations)) {
+      // 如果有位置不在同一页(上方条件)，则暂时不作变化，后期修改
+      adjustPageBox(domData.$dom, pages, opt.pages);
+      animateDoms(data, opt, getIndexByLocation(moveLocation.location, data, opt));
+    } else {
+      // 如果位置都在同一页(上方条件)，则继续移动
+      adjustPageBox(domData.$dom, pages, opt.pages);
+      animateDoms(data, opt, getIndexByLocation(moveLocation.location, data, opt));
+    }
   }
 
   /**

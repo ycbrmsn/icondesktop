@@ -22,17 +22,17 @@
   </select><input type="button" onclick="desktop.switchState($(this).prev().val());" value="切换">
   <input type="button" onclick="console.log(desktop.getIconData({title:'图标就是2',img:'img/email.png'}));" value="查询图标数据">
   <script type="text/javascript">
-    // var desktop = $('#icondesktop').icondesktop({
-    //   data: [
-    //     {
-    //       title: '图标就是1',
-    //       extraClass: '',
-    //       size: '1x1',
-    //       superscript: '23',
-    //       img: 'img/email.png'
-    //     }
-    //   ]
-    // });
+    var desktop = $('#icondesktop').icondesktop({
+      data: [
+        {
+          title: '图标就是1',
+          extraClass: '',
+          size: '1x1',
+          superscript: '23',
+          img: 'img/email.png'
+        }
+      ]
+    });
     desktop = $('#icondesktop').icondesktop({
       // desktopVerticalPadding: 50,
       // desktopAutoFill: true,
