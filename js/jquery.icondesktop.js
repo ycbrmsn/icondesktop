@@ -35,7 +35,8 @@
  *   1.6.1 2018-01-30 修改jquery1.8.3版本下打开盒子后隐藏图标未显示的问题
  *   1.6.2 2018-01-30 修改盒子交换后节点未进行移动导致数据错误的问题
  *   2.0.0 插件名称由iconbox改为icondesktop，划分桌面区域，增加桌面工具，桌面工具在桌面上放不下时将不会显示出来，
- *     调整一行或一列时的图标位置，桌面大小变化时调整图标位置，图标/盒子/工具皆可调换位置，移动时可在不同页移动
+ *     调整一行或一列时的图标位置，桌面大小变化时调整图标位置，图标/盒子/工具皆可调换位置，移动时可在不同页移动，
+ *     桌面右键菜单刷新
  */
 ;(function (factory) {
   if (typeof define === "function" && define.amd) {
@@ -140,6 +141,10 @@
       // 桌面大小改变重新初始化
       $(this).off('resize').on('resize', function () {
         refreshDesktop($root, opt);
+      });
+
+      $(this).off('click').on('click', function (argument) {
+        hideMenu($root);
       });
 
       // 点击翻页
@@ -458,7 +463,7 @@
             }).css({
               'cursor': 'move',
               'left': iconLeft - iconWidthChange + 'px',
-              'top': iconTop - iconHeightChange + 'px',
+              'top': iconTop - iconHeightChange + 'px'
             });
             if ($this.hasClass('iconbox-a')) {
               // 如果是图标(上方条件)，则调整图标大小
@@ -495,9 +500,19 @@
       // 右键菜单
       this.oncontextmenu = function (e) {
         var e = e || window.event;
-        console.log(e)
+        // console.log(this)
+        $root.find('.icondesktop-menu').css({
+          'left': e.offsetX + 'px',
+          'top': e.offsetY + 'px'
+        }).show();
         return false;//取消右键点击的默认事件
       }
+      $(this).off('click', '.icondesktop-menuitem').on('click', '.icondesktop-menuitem', function (e) {
+        var $this = $(this);
+        if ($this.hasClass('icondesktop-menuitem__refresh')) {
+          refreshDesktop($root, opt);
+        }
+      });
     });
     var $root = $(this);
     return {
@@ -904,6 +919,13 @@
     // 添加分页栏
     $root.append($pagePanel);
     $root.find('.icondesktop-slidebox').append(opt.moveIconObj.$closeBoxBackground);
+    // 添加菜单
+    var $menu = $('<div class="icondesktop-menu">'
+      + '<dl class="icondesktop-menulist">'
+        + '<dd class="icondesktop-menuitem icondesktop-menuitem__refresh">刷新</dd>'
+      +'</dl></div>');
+    $menu.hide();
+    $root.append($menu);
   }
 
   /**
@@ -1654,6 +1676,23 @@
     initDoms($root, opt);
     // 初始化所有样式
     initStyles($root, opt);
+    // 初始化一些事件
+    initEvents($root, opt);
+  }
+
+  function initEvents($root, opt) {
+    $root.find('.icondesktopbox').each(function (argument) {
+      $(this).get(0).oncontextmenu = function (e) {
+        if (e) {
+          e.stopPropagation();
+        } else {
+          var event = window.event;
+          event.cancelBubble = true;
+        }
+        $root.find('.icondesktop-menu').hide();
+        return false;
+      }
+    });
   }
 
   /**
@@ -3076,6 +3115,10 @@
     } else {
       return 1;
     }
+  }
+
+  function hideMenu($root) {
+    $root.find('.icondesktop-menu').hide();
   }
 
   // 点击图标标题可编辑，写在这里主要用于阻止冒泡
