@@ -34,9 +34,9 @@
  *   1.6.0 2018-01-27 新增根据图标的一个属性或多个属性数据来查询该图标的具体数据的方法
  *   1.6.1 2018-01-30 修改jquery1.8.3版本下打开盒子后隐藏图标未显示的问题
  *   1.6.2 2018-01-30 修改盒子交换后节点未进行移动导致数据错误的问题
- *   2.0.0 插件名称由iconbox改为icondesktop，划分桌面区域，增加桌面工具，桌面工具在桌面上放不下时将不会显示出来，
- *     调整一行或一列时的图标位置，桌面大小变化时调整图标位置，图标/盒子/工具皆可调换位置，移动时可在不同页移动，
- *     桌面右键菜单刷新
+ *   2.0.0 插件名称由iconbox改为icondesktop。划分桌面区域。增加桌面工具。桌面工具在桌面上放不下时将不会显示出来。
+ *     调整一行或一列时的图标位置。桌面大小变化时调整图标位置。图标/盒子/工具皆可调换位置。移动时可在不同页移动。
+ *     桌面右键菜单刷新。盒子中的图标可移动。
  */
 ;(function (factory) {
   if (typeof define === "function" && define.amd) {
@@ -70,7 +70,8 @@
       openBoxColor: '#3C3C3C', // 盒子打开时的背景颜色
       openBoxTitleHeight: 40, // 盒子打开时的标题高度
       openBoxTitleFontSize: 18, // 盒子打开时的标题字体大小
-      openBoxPadding: 20, // 盒子打开时的内边距
+      openBoxMargin: 40, // 盒子打开时里面容器的外边距
+      openBoxPadding: 20, // 盒子打开时里面容器的内边距
       openBoxIconMargin: 20, // 盒子打开时里面的图标的外边距
       maxChineseCharLength: 7, // 图标显示的最大字数
       ellipticalChars: '...', // 图标字数过长截取后添加的字符串
@@ -209,155 +210,10 @@
         }
         if ($this.hasClass('iconbox__close')) {
           // ***************************** 以下为打开盒子操作 ******************************
-          $this.removeClass('iconbox__close').addClass('iconbox__open');
-          opt.openBox.top = $this.css('top');
-          opt.openBox.left = $this.css('left');
-          opt.openBox.$box = $this;
-          $this.css('zIndex', 5);
-          if (opt.ableChecked) {
-            // 隐藏盒子多选按钮
-            $this.find('.iconbox-checkbox__parent').hide();
-          }
-          if (opt.ableDel) {
-            // 隐藏盒子删除按钮
-            $this.find('.iconbox-delbtn__parent').hide();
-          }
-          // 隐藏盒子角标
-          $this.find('.iconbox-superscript__parent').hide();
-          // 隐藏盒子背景图片
-          $this.find('.iconbox-bg').hide();
-          if (opt.ableEditTitle) {
-            // 触发更新标题事件
-            $this.find('.iconbox-icontitleinput:visible').focus().blur();
-            // 隐藏标题编辑输入框
-            $this.find('.iconbox-icontitleinput').hide();
-          }
-          // 盒子标题超长时不省略
-          var $boxTitle = $this.find('.iconbox-title');
-          var boxTitle = $boxTitle.attr('title');
-          if (boxTitle) {
-            $boxTitle.text(boxTitle);
-          }
-          // 盒子放大
-          $this.animate({  
-            'backgroundColor': opt.openBoxColor,
-            'width': opt.width - opt.openBoxPadding * 2 + 'px',
-            'height': opt.height - opt.openBoxPadding * 2 + 'px',
-            'left': opt.currentPageIndex * opt.width + 'px',
-            'top': '0',
-            'padding': opt.openBoxPadding
-          }, function () {
-            opt.ableClickBox = true;
-            if (opt.ableChecked) {
-              // 显示图标多选按钮
-              $this.find('.iconbox-checkbox__children').show();
-            }
-            if (opt.ableDel) {
-              // 显示图标删除按钮
-              $this.find('.iconbox-delbtn__children').show();
-            }
-            // 更新图标角标
-            updateIconInBoxSuperscript($this, opt);
-            // 显示盒子内图标标题
-            $this.find('.iconbox-icontitle').show();
-          });
-          // 放大标题
-          $this.find('.iconbox-title').css({
-            'height': '0px',
-            'lineHeight': '0px',
-            'fontSize': '0px',
-            'position': ''
-          }).animate({
-            'height': opt.openBoxTitleHeight + 'px',
-            'lineHeight': opt.openBoxTitleHeight + 'px',
-            'fontSize': opt.openBoxTitleFontSize + 'px'
-          });
-          // 缩略图放大
-          $this.find('.iconbox-a').show().animate({
-            'width': opt.closeBoxWidth + 'px',
-            'height': opt.closeBoxHeight + 'px',
-            'margin': opt.openBoxIconMargin + 'px'
-          });
+          openIconBox($this, opt);
         } else {
           // ***************************** 以下为关闭盒子操作 ******************************
-          opt.openBox.$box = null;
-          $this.removeClass('iconbox__open').addClass('iconbox__close');
-          if (opt.ableChecked) {
-            // 隐藏图标多选按钮
-            $this.find('.iconbox-checkbox__children').hide();
-          }
-          if (opt.ableDel) {
-            // 隐藏图标删除按钮
-            $this.find('.iconbox-delbtn__children').hide();
-          }
-          // 隐藏图标角标
-          $this.find('.iconbox-superscript__children').hide();
-          if (opt.ableEditTitle) {
-            // 隐藏盒子内标题编辑框
-            $this.find('.iconbox-icontitleinput:visible').focus().blur();
-          }
-          // 隐藏盒子内图标标题
-          $this.find('.iconbox-icontitle').hide();
-          // 盒子缩小
-          $this.animate({
-            'backgroundColor': opt.closeBoxColor,
-            'width': opt.closeBoxWidth - opt.closeBoxPadding * 2 + 'px',
-            'height': opt.closeBoxHeight - opt.closeBoxPadding * 2 + 'px',
-            'left': opt.openBox.left,
-            'top': opt.openBox.top,
-            'padding': opt.closeBoxPadding
-          }, function () {
-            $this.css({
-              'zIndex': 1,
-              'backgroundColor': ''
-            });
-            // 盒子标题超长时省略
-            var $boxTitle = $this.find('.iconbox-title');
-            var boxShortTitle = $boxTitle.attr('shortTitle');
-            if (boxShortTitle) {
-              $boxTitle.text(boxShortTitle);
-            }
-            // 显示盒子多选按钮
-            if (opt.ableChecked) {
-              $this.find('.iconbox-checkbox__parent').show();
-            }
-            // 显示盒子删除按钮
-            if (opt.ableDel) {
-              $this.find('.iconbox-delbtn__parent').show();
-            }
-            // 更新盒子角标
-            updateBoxSuperscript($this, opt);
-            // 显示盒子背景图片
-            $this.find('.iconbox-bg').show();
-            // 盒子里超过9个图标后隐藏
-            $this.find('.iconbox-a').each(function () {
-              if ($(this).index() > opt.maxShowIconInBox) {
-                $(this).hide();
-              }
-            });
-            opt.ableClickBox = true;
-          });
-          // 缩小标题
-          $this.find('.iconbox-title').animate({
-            'height': '0px',
-            'lineHeight': '0px',
-            'fontSize': '0px'
-          }, function () {
-            $(this).css({
-              'height': opt.closeBoxTitleHeight + 'px',
-              'lineHeight': opt.closeBoxTitleHeight + 'px',
-              'fontSize': opt.closeBoxTitleFontSize + 'px',
-              'bottom': - opt.closeBoxTitleHeight + 'px',
-              'position': 'absolute'
-            });
-          });
-          // 缩略图缩小
-          // console.log(opt.verIconInCloseBoxMargin + 'px ' + opt.horIconInCloseBoxMargin + 'px')
-          $this.find('.iconbox-a').animate({
-            'width': opt.thumbnailWidth + 'px',
-            'height': opt.thumbnailHeight + 'px',
-            'margin': opt.verIconInCloseBoxMargin + 'px ' + opt.horIconInCloseBoxMargin + 'px'
-          });
+          closeIconBox($this, opt);
         }
       });
 
@@ -626,6 +482,8 @@
 
     // 将桌面划分成若干个格子
     separateDesktopGrids($root, opt);
+    // 将打开的盒子划分成若干个格子
+    separateBoxGrids($root, opt);
 
     if (opt.pageSize == 0) {
       return;
@@ -666,7 +524,8 @@
     // 设置盒子内最多显示9个图标，第一个为superscript, 第二个为delbtn, 第三个为checkbox，第四个为input，第五个为label，第六个为盒子背景
     var otherThingNumInBox = 6;
     opt.otherThingNumInBox = otherThingNumInBox;
-    var maxShowIconInBox = 8 + opt.otherThingNumInBox;
+    // var maxShowIconInBox = 8 + opt.otherThingNumInBox;
+    var maxShowIconInBox = 8;
     opt.maxShowIconInBox = maxShowIconInBox;
 
     // 是否能够点击盒子，避免多次点击动画错乱
@@ -694,7 +553,7 @@
     if (!dataBox) {
       $icon.addClass('icondesktopbox');
       // 设置图标的位置
-      setLocations($icon, dataIcon, opt);
+      setLocationsOnDesktop($icon, dataIcon, opt);
     }
     var $iconTitle = $(document.createElement('label'));
     $iconTitle.addClass('iconbox-icontitle');
@@ -773,6 +632,18 @@
     // 编辑标题单行文本框
     var $iconTitleInput = $('<input type="text" class="iconbox-icontitleinput iconbox-titleinput" value="' + dataBox.title + '">');
     $box.append($iconTitleInput);
+    // 添加移入移出框范围
+    var $boxArea = $('<div class="iconbox-area">'
+      + '<div class="iconbox-area__part iconbox-area__topleft"></div><div class="iconbox-area__part iconbox-area__top"></div>'
+      + '<div class="iconbox-area__part iconbox-area__topright"></div><div class="iconbox-area__part iconbox-area__left"></div>'
+      + '<div class="iconbox-area__part iconbox-area__right"></div><div class="iconbox-area__part iconbox-area__bottomleft"></div>'
+      + '<div class="iconbox-area__part iconbox-area__bottom"></div><div class="iconbox-area__part iconbox-area__bottomright"></div>'
+      + '<div class="iconbox-scrollbar"></div>'
+      + '</div>');
+    $box.append($boxArea);
+    var $boxContainer = $('<div class="iconbox-area__container"></div>');
+    bindBoxScroll($boxContainer, opt);
+    $boxArea.append($boxContainer);
     // 添加盒子背景
     var $backgroundIcon = $('<img src="' + opt.closeBoxBackgroundImage + '" width="100%" height="100%" class="iconbox-bg">');
     $box.append($backgroundIcon);
@@ -784,7 +655,7 @@
       dataIcon = dataBox.children[j];
       // 创建图标
       var $icon = constructIcon(opt, checkboxObj, dataIcon, dataBox);
-      $box.append($icon);
+      $boxContainer.append($icon);
     }
     
     // 多选按钮
@@ -818,7 +689,7 @@
     $box.find('.iconbox-superscript__children').hide();
 
     // 设置盒子的位置
-    setLocations($box, dataBox, opt);
+    setLocationsOnDesktop($box, dataBox, opt);
 
     return $box;
   }
@@ -836,7 +707,7 @@
       'height': dimension.height + 'px'
     });
     // 设置工具的位置
-    setLocations($tool, dataTool, opt);
+    setLocationsOnDesktop($tool, dataTool, opt);
 
     return $tool;
   }
@@ -946,7 +817,7 @@
       'backgroundColor': opt.closeBoxColor
     });
     // 设置盒子及相关样式
-    setBoxStyle($root.find('.iconbox__close'), opt);
+    setBoxStyle($root.find('.iconbox'), opt);
     // 设置所有标题样式
     setTitleStyle($root, opt);
     // 设置桌面图标样式
@@ -980,17 +851,23 @@
 
   function setBoxStyle($box, opt) {
     // 设置盒子样式
-    $box.css({
-      'padding': opt.closeBoxPadding,
-      'width': opt.closeBoxWidth - opt.closeBoxPadding * 2 + 'px',
-      'height': opt.closeBoxHeight - opt.closeBoxPadding * 2 + 'px'
-    });
-    // 设置盒子内小图标大小、外边距
-    $box.find('.iconbox-a').css({
-      'width': opt.thumbnailWidth + 'px', 
-      'height': opt.thumbnailHeight + 'px',
-      'margin': opt.verIconInCloseBoxMargin + 'px ' + opt.horIconInCloseBoxMargin + 'px'
-    });
+    if ($box.hasClass('iconbox__close')) {
+      $box.css({
+        'width': opt.closeBoxWidth + 'px',
+        'height': opt.closeBoxHeight + 'px'
+      });
+      // 设置盒子内小图标大小、外边距
+      $box.find('.iconbox-a').css({
+        'width': opt.thumbnailWidth + 'px', 
+        'height': opt.thumbnailHeight + 'px',
+        'margin': opt.verIconInCloseBoxMargin + 'px ' + opt.horIconInCloseBoxMargin + 'px'
+      });
+      $box.find('.iconbox-area__container').css({
+        'padding': opt.closeBoxPadding
+      });
+    } else if ($box.hasClass('.iconbox__open')) {
+
+    }
   }
 
   function setTitleStyle($dom, opt) {
@@ -1891,7 +1768,6 @@
   function updateIconInBoxSuperscript($box, opt, data) {
     if (!data) {
       data = getIconData($box, opt);
-      console.log(data)
     }
     var $icons = $box.find('.iconbox-a');
     for (var i = 0; i < data.children.length; i++) {
@@ -2025,6 +1901,82 @@
     opt.separationLine = separationLine;
   }
 
+  function separateBoxGrids($root, opt) {
+    var leftAndRight
+    opt.openBoxWidth = opt.width - opt.openBoxMargin * 2;
+    // 上方两倍间距，下方一倍间距
+    opt.openBoxHeight = opt.height - opt.openBoxMargin * 3;
+
+    // 计算盒子内水平可以放几个图标
+    // (打开盒子时里面容器的宽度 - 打开盒子时里面容器的左右的内边距 + 图标之间的水平外边距) / (图标的宽度 + 图标的水平外边距)
+    var horIconSize = Math.floor((opt.openBoxWidth - opt.openBoxPadding * 2 + opt.closeBoxHorizontalMargin) / (opt.closeBoxWidth + opt.closeBoxHorizontalMargin));
+    // 计算盒子内垂直方向可以放几个图标
+    // (打开盒子时里面容器的高度 - 打开盒子时里面容器上下的内边距 + 图标之间的垂直外边距) / (图标高度 + 图标名称 + 图标垂直外边距)
+    var verIconSize = Math.floor((opt.openBoxHeight - opt.openBoxPadding * 2 + opt.closeBoxVerticalMargin) / (opt.closeBoxHeight + opt.closeBoxTitleHeight + opt.closeBoxVerticalMargin));
+    opt.horIconSize = horIconSize;
+    opt.verIconSize = verIconSize;
+
+    // 打开盒子内图标的实际水平间距
+    var openBoxRealHorizontalMargin = (opt.openBoxWidth - opt.openBoxPadding * 2 - opt.closeBoxWidth * horIconSize) / (horIconSize - 1);
+    // 打开盒子内图标的实际垂直间距
+    var openBoxRealVerticalMargin = (opt.openBoxHeight - opt.openBoxPadding * 2 - opt.closeBoxHeight * verIconSize - opt.closeBoxTitleHeight * verIconSize) / (verIconSize - 1);
+    if (openBoxRealVerticalMargin > opt.closeBoxHeight) {
+      // 当垂直间距大于了盒子的高度时，通常是只有两行盒子时会出现(上方条件)
+      // 此时缩小间距，不然看起来太丑了
+      openBoxRealVerticalMargin = opt.closeBoxHeight;
+    }
+    opt.openBoxRealHorizontalMargin = openBoxRealHorizontalMargin;
+    opt.openBoxRealVerticalMargin = openBoxRealVerticalMargin;
+
+    // 填充数据的位置信息，以及总页数
+    // fillLocationInBox(opt.data, opt);
+
+    // 记录下所有的格子
+    var boxGrids = {};
+    // 记录下所有的分割线
+    var separationBoxLine = {
+      lineX: [],
+      lineY: []
+    }
+    var halfBoxWidth = opt.closeBoxWidth / 2;
+    var halfBoxHeight = opt.closeBoxHeight / 2;
+    // 循环行
+    for (var i = 0; i < verIconSize; i++) {
+      // 循环列
+      for (var j = 0; j < horIconSize; j++) {
+        var locationPoint = getLocationPointInBox(i, j, opt);
+        var top = locationPoint.y;
+        var bottom = top + opt.closeBoxHeight;
+        var left = locationPoint.x;
+        var right = left + opt.closeBoxWidth
+        boxGrids['g_' + i + '_' + j] = {
+          top: top,
+          bottom: bottom,
+          left: left,
+          right: right
+        };
+        if (i == 0) {
+          // 如果当前是第一行(上方条件)
+          // 则记录下所有纵向分割线
+          separationBoxLine.lineX.push(left - halfBoxWidth);
+          separationBoxLine.lineX.push(left + halfBoxWidth);
+        }
+        if (j == 0) {
+          // 如果当前是第一页的第一列(上方条件)
+          // 则记录下所有的横向分割线
+          separationBoxLine.lineY.push(top - halfBoxHeight);
+          separationBoxLine.lineY.push(top + halfBoxHeight);
+        }
+      } // 循环列结束
+    } // 循环行结束
+    // 右边的分割线(右边线 - 桌面水平内边距 + 半个格子的宽度)
+    separationBoxLine.lineX.push(opt.desktopWidth - opt.openBoxMargin + halfBoxHeight);
+    // 下边的分割线(下边线 - 桌面的分页栏高度)
+    separationBoxLine.lineY.push(opt.desktopHeight - opt.pageHeight);
+    opt.boxGrids = boxGrids;
+    opt.separationBoxLine = separationBoxLine;
+  }
+
   /**
    * [getLocationPoint 获得位置点]
    * @param  {[type]} page [description]
@@ -2046,6 +1998,28 @@
       left = col * (opt.closeBoxWidth + opt.closeBoxRealHorizontalMargin) + opt.desktopHorizontalPadding;
     }
     left += page * opt.desktopWidth;
+    return {
+      x: Math.floor(left),
+      y: Math.floor(top)
+    }
+  }
+
+  function getLocationPointInBox(row, col, opt) {
+    var top, left;
+    if (opt.verIconSize == 1) {
+      // 居中排列
+      top = (opt.desktopHeight + opt.openBoxMargin - opt.closeBoxHeight - opt.closeBoxTitleHeight) / 2;
+    } else {
+      // 行数 * (图标高度 + 打开盒子时里面图标的实际间距 + 图标标题高度) + 打开盒子时里面容器的上方外边距 + 打开盒子时里面容器的上方内边距
+      top = row * (opt.closeBoxHeight + opt.openBoxRealVerticalMargin + opt.closeBoxTitleHeight) + opt.openBoxMargin * 2 + opt.openBoxPadding;
+    }
+    if (opt.horIconSize == 1) {
+      // 居中排列
+      left = (opt.desktopWidth - opt.closeBoxWidth) / 2;
+    } else {
+      // 列数 * (图标宽度 + 打开盒子时里面图标的实际间距) + 打开盒子时里面容器的左方外边距 + 打开盒子时里面容器的左方内边距
+      left = col * (opt.closeBoxWidth + opt.openBoxRealHorizontalMargin) + opt.openBoxMargin + opt.openBoxPadding;
+    }
     return {
       x: Math.floor(left),
       y: Math.floor(top)
@@ -2125,6 +2099,21 @@
     return filledLocations;
   }
 
+  function fillLocationInBox(children, location, opt) {
+    var locationBoxObj = {};
+    opt.locationBoxObj = locationBoxObj;
+
+    for (var i = 0; i < children.length; i++) {
+      var element = children[i];
+      // 补上位置信息
+      element.location = getFirstEmptyLocationInBox(location, opt);
+      // 如果数据关联了dom节点，则修改dom节点的位置信息记录
+      if (element.$dom) {
+        setLocationAttr(element.$dom, element.location);
+      }
+    }
+  }
+
   /**
    * [isLocationsNotOnePage 是否有位置不在同一页]
    * @param  {[type]}  page      [description]
@@ -2181,12 +2170,12 @@
   }
 
   /**
-   * [setLocations 设置节点的位置]
+   * [setLocationsOnDesktop 设置桌面上节点的位置]
    * @param {[type]} $dom [description]
    * @param {[type]} data [description]
    * @param {[type]} opt  [description]
    */
-  function setLocations($dom, data, opt) {
+  function setLocationsOnDesktop($dom, data, opt) {
     var locationInfo = parseLocationInfo(data.location);
     var point = getLocationPoint(locationInfo.page, locationInfo.row, locationInfo.col, opt);
     // 将dom与数据绑定
@@ -2201,6 +2190,10 @@
       left: point.x + 'px',
       top: point.y + 'px'
     })
+  }
+
+  function setLocationsInBox($dom, children, opt) {
+    
   }
 
   /**
@@ -2243,6 +2236,32 @@
       locationObj[locations[i]] = createLocationRelativeInfo(locations[0], size);
     }
     return locations[0];
+  }
+
+  function getFirstEmptyLocationInBox(location, opt) {
+    var locationBoxObj = opt.locationBoxObj;
+    var locationIconObj = locationBoxObj[location] || {};
+    var row = 0;
+    var col = 0;
+    // 最大循环次数，避免死循环，循环十次依然找不到则认为没有足够的空间可以放置内容
+    var maxCycleTimes = 10;
+    // 当前循环次数
+    var curCycleTimes = 0;
+    var curLocation;
+    outer:
+    while (true) {
+      for (var i = 0; i < opt.horIconSize; i++) {
+        var curLocation = createLocation(-1, row, i);
+        if (!locationIconObj[curLocation]) {
+          break outer;
+        }
+      }
+      row++;
+    }
+    // 匹配到空位置之后，把需要占用的位置存入locationBoxObj中
+    locationIconObj[curLocation] = createLocationRelativeInfo(curLocation, size);
+    // 赋值
+    opt.locationBoxObj[location] = locationIconObj;
   }
 
   /**
@@ -2649,6 +2668,10 @@
       animateDoms(data, opt, getIndexByLocation(moveLocation.location, data, opt));
     }
   }
+
+  function moveIconInBox(domData, data, moveLocation, opt) {
+     // body...
+   }
 
   /**
    * [showGroupBox 显示放大的盒子背景]
@@ -3121,6 +3144,212 @@
     $root.find('.icondesktop-menu').hide();
   }
 
+  function openIconBox($this, opt) {
+    $this.removeClass('iconbox__close').addClass('iconbox__open');
+    opt.openBox.top = $this.css('top');
+    opt.openBox.left = $this.css('left');
+    opt.openBox.$box = $this;
+    $this.css('zIndex', 5);
+    if (opt.ableChecked) {
+      // 隐藏盒子多选按钮
+      $this.find('.iconbox-checkbox__parent').hide();
+    }
+    if (opt.ableDel) {
+      // 隐藏盒子删除按钮
+      $this.find('.iconbox-delbtn__parent').hide();
+    }
+    // 隐藏盒子角标
+    $this.find('.iconbox-superscript__parent').hide();
+    // 隐藏盒子背景图片
+    $this.find('.iconbox-bg').hide();
+    if (opt.ableEditTitle) {
+      // 触发更新标题事件
+      $this.find('.iconbox-icontitleinput:visible').focus().blur();
+      // 隐藏标题编辑输入框
+      $this.find('.iconbox-icontitleinput').hide();
+    }
+    // 盒子标题超长时不省略
+    var $boxTitle = $this.find('.iconbox-title');
+    var boxTitle = $boxTitle.attr('title');
+    if (boxTitle) {
+      $boxTitle.text(boxTitle);
+    }
+    // 盒子放大
+    $this.animate({  
+      'backgroundColor': opt.openBoxColor,
+      'width': opt.width - opt.openBoxPadding * 2 + 'px',
+      'height': opt.height - opt.openBoxPadding * 2 + 'px',
+      'left': opt.currentPageIndex * opt.width + 'px',
+      'top': '0',
+      'padding': opt.openBoxPadding
+    }, function () {
+      opt.ableClickBox = true;
+      if (opt.ableChecked) {
+        // 显示图标多选按钮
+        $this.find('.iconbox-checkbox__children').show();
+      }
+      if (opt.ableDel) {
+        // 显示图标删除按钮
+        $this.find('.iconbox-delbtn__children').show();
+      }
+      // 更新图标角标
+      updateIconInBoxSuperscript($this, opt);
+      // 显示盒子内图标标题
+      $this.find('.iconbox-icontitle').show();
+      // 盒子内容器如果溢出可滚动
+      var $areaContainer = $this.find('.iconbox-area__container');
+      $areaContainer.css({
+        'width': opt.openBoxWidth - opt.closeBoxPadding * 2 + 20 + 'px',
+        'height': opt.openBoxHeight - opt.closeBoxPadding * 2 + 'px',
+        'overflow': 'auto'
+      });
+      if (hasScrollBar($areaContainer)) {
+        // 如果有滚动条(上方条件)，则显示滚动条
+        var wholeHeight = $areaContainer.get(0).scrollHeight;
+        var showHeight = $areaContainer.outerHeight();
+        var borderRadius = 20;
+        var scrollMoveHeight = showHeight - borderRadius * 2;
+        // 滚动条中滑块的高度 = 滚动条可以滚动的高度 / 总高度(加上滚动区域的高度) * 容器的高度
+        var scrollBarHeight = Math.floor(scrollMoveHeight / wholeHeight * showHeight);
+        $this.find('.iconbox-scrollbar').css({
+          'top': borderRadius + 'px',
+          'height': scrollBarHeight + 'px'
+        }).fadeIn();
+      }
+    });
+    $this.find('.iconbox-area').animate({
+      'left': '40px',
+      'right': '40px',
+      'top': '80px',
+      'bottom': '40px'
+    });
+    // 放大标题
+    $this.find('.iconbox-title').css({
+      'height': '0px',
+      'lineHeight': '0px',
+      'fontSize': '0px',
+      'position': ''
+    }).animate({
+      'height': opt.openBoxTitleHeight + 'px',
+      'lineHeight': opt.openBoxTitleHeight + 'px',
+      'fontSize': opt.openBoxTitleFontSize + 'px'
+    });
+    // 缩略图放大
+    $this.find('.iconbox-a').show().animate({
+      'width': opt.closeBoxWidth + 'px',
+      'height': opt.closeBoxHeight + 'px',
+      'margin': opt.openBoxIconMargin + 'px'
+    });
+  }
+
+  function closeIconBox($this, opt) {
+    opt.openBox.$box = null;
+    $this.removeClass('iconbox__open').addClass('iconbox__close');
+    if (opt.ableChecked) {
+      // 隐藏图标多选按钮
+      $this.find('.iconbox-checkbox__children').hide();
+    }
+    if (opt.ableDel) {
+      // 隐藏图标删除按钮
+      $this.find('.iconbox-delbtn__children').hide();
+    }
+    // 隐藏图标角标
+    $this.find('.iconbox-superscript__children').hide();
+    if (opt.ableEditTitle) {
+      // 隐藏盒子内标题编辑框
+      $this.find('.iconbox-icontitleinput:visible').focus().blur();
+    }
+    // 隐藏盒子内图标标题
+    $this.find('.iconbox-icontitle').hide();
+    // 盒子内容器溢出隐藏
+    $this.find('.iconbox-area__container').css({
+      'width': '',
+      'height': '',
+      'overflow': 'hidden'
+    });
+    $this.find('.iconbox-scrollbar').fadeOut();
+    // 盒子缩小
+    $this.animate({
+      'backgroundColor': opt.closeBoxColor,
+      'width': opt.closeBoxWidth - opt.closeBoxPadding * 2 + 'px',
+      'height': opt.closeBoxHeight - opt.closeBoxPadding * 2 + 'px',
+      'left': opt.openBox.left,
+      'top': opt.openBox.top,
+      'padding': opt.closeBoxPadding
+    }, function () {
+      $this.css({
+        'zIndex': 1,
+        'backgroundColor': ''
+      });
+      // 盒子标题超长时省略
+      var $boxTitle = $this.find('.iconbox-title');
+      var boxShortTitle = $boxTitle.attr('shortTitle');
+      if (boxShortTitle) {
+        $boxTitle.text(boxShortTitle);
+      }
+      // 显示盒子多选按钮
+      if (opt.ableChecked) {
+        $this.find('.iconbox-checkbox__parent').show();
+      }
+      // 显示盒子删除按钮
+      if (opt.ableDel) {
+        $this.find('.iconbox-delbtn__parent').show();
+      }
+      // 更新盒子角标
+      updateBoxSuperscript($this, opt);
+      // 显示盒子背景图片
+      $this.find('.iconbox-bg').show();
+      // 盒子里超过9个图标后隐藏
+      $this.find('.iconbox-a').each(function () {
+        if ($(this).index() > opt.maxShowIconInBox) {
+          $(this).hide();
+        }
+      });
+      opt.ableClickBox = true;
+    });
+    $this.find('.iconbox-area').animate({
+      'left': '0px',
+      'right': '0px',
+      'top': '0px',
+      'bottom': '0px'
+    });
+    // 缩小标题
+    $this.find('.iconbox-title').animate({
+      'height': '0px',
+      'lineHeight': '0px',
+      'fontSize': '0px'
+    }, function () {
+      $(this).css({
+        'height': opt.closeBoxTitleHeight + 'px',
+        'lineHeight': opt.closeBoxTitleHeight + 'px',
+        'fontSize': opt.closeBoxTitleFontSize + 'px',
+        'bottom': - opt.closeBoxTitleHeight + 'px',
+        'position': 'absolute'
+      });
+    });
+    // 缩略图缩小
+    // console.log(opt.verIconInCloseBoxMargin + 'px ' + opt.horIconInCloseBoxMargin + 'px')
+    $this.find('.iconbox-a').animate({
+      'width': opt.thumbnailWidth + 'px',
+      'height': opt.thumbnailHeight + 'px',
+      'margin': opt.verIconInCloseBoxMargin + 'px ' + opt.horIconInCloseBoxMargin + 'px'
+    });
+  }
+
+  /**
+   * [hasScrollBar 是否有滚动条]
+   * @param  {[type]}  $dom [description]
+   * @return {Boolean}      [description]
+   */
+  function hasScrollBar($dom) {
+    // $dom.scrollTop(1);
+    // var existScrollBar = ($dom.scrollTop() > 0);
+    // $dom.scrollTop(0);
+    console.log($dom.outerHeight() + '-' + $dom.get(0).scrollHeight)
+    // return existScrollBar;
+    return $dom.outerHeight() !== $dom.get(0).scrollHeight;
+  }
+
   // 点击图标标题可编辑，写在这里主要用于阻止冒泡
   function bindTitleClick($dom, opt) {
     $dom.click(function (e) {
@@ -3264,6 +3493,33 @@
       } else {
         $icon.remove();
       }
+    });
+  }
+
+  /**
+   * [bindBoxScroll 绑定滚动条事件]
+   * @param  {[type]} $boxContainer [description]
+   * @param  {[type]} opt           [description]
+   * @return {[type]}               [description]
+   */
+  function bindBoxScroll($boxContainer, opt) {
+    $boxContainer.scroll(function () {
+      var scrollTop = $boxContainer.scrollTop();
+      var showHeight = $boxContainer.outerHeight();
+      var borderRadius = 20;
+      var scrollMoveHeight = showHeight - borderRadius * 2;
+      var wholeHeight = $boxContainer.get(0).scrollHeight;
+
+      // var scrollBarHeight = Math.floor(scrollMoveHeight / wholeHeight * showHeight);
+      // // 滚动条剩余部分可以滚的高度 / 可以滚动的部分 * 滚动部分
+      // var moveTop = Math.floor((scrollMoveHeight - scrollBarHeight) / (wholeHeight - showHeight) * scrollTop);
+      // console.log((scrollMoveHeight - scrollBarHeight) / (wholeHeight - showHeight));
+      var moveTop = Math.floor(scrollMoveHeight / wholeHeight * scrollTop);
+      console.log('-------------')
+      console.log(scrollMoveHeight / wholeHeight);
+      $boxContainer.siblings('.iconbox-scrollbar').css({
+        'top': borderRadius + moveTop + 'px'
+      });
     });
   }
 }));
