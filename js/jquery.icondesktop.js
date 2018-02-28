@@ -74,7 +74,7 @@
       openBoxMarginLeft: 40, // 盒子打开时里面容器的左方外边距
       openBoxMarginRight: 40, // 盒子打开时里面容器的右方外边距
       openBoxMarginBottom: 40, // 盒子打开时里面容器的下方外边距
-      openBoxPadding: 20, // 盒子打开时里面容器的内边距
+      openBoxPadding: 30, // 盒子打开时里面容器的内边距
       openBoxIconMargin: 20, // 盒子打开时里面的图标的外边距
       maxChineseCharLength: 7, // 图标显示的最大字数
       ellipticalChars: '...', // 图标字数过长截取后添加的字符串
@@ -83,6 +83,15 @@
       ableDel: false, // 图标是否可以删除
       ableDrag: true, // 图标是否可以拖动
       openBoxIconClick: function (data) {}, // 盒子打开时里面的图标点击事件
+      menus: [
+        {
+          title: '刷新',
+          extraClass: '', // 多个样式以空格隔开
+          doClick: function () {
+            returnVal.refreshDesktop();
+          }
+        }
+      ],
       data: [
         {
           title: '图标1',
@@ -184,7 +193,7 @@
         } else if (opt.ableDrag && opt.moveObj) {
           // 移动盒子/图标
           // console.log(e.pageX - opt.moveIconObj.mouseDownIconPrevPoint.x)
-          moveIcon(opt.moveObj, opt, e);
+          moveIcon(opt, e);
         }
       });
       $(this).off('mouseup').on('mouseup', function (e) {
@@ -193,7 +202,7 @@
         e.stopPropagation();
         if (opt.ableDrag && opt.moveObj) {
           // 取消盒子/图标移动
-          cancelIconMove(opt.moveObj, opt);
+          cancelIconMove(opt);
         }
       });
 
@@ -280,7 +289,7 @@
       // 持续按下500毫秒后生效
       var mouseDownIconDuration = 500;
       // 鼠标按下盒子/图标事件
-      $(this).off('mousedown', '.icondesktopbox').on('mousedown', '.icondesktopbox', function (e) {
+      $(this).off('mousedown', '.icondesktopbox,.iconinbox').on('mousedown', '.icondesktopbox,.iconinbox', function (e) {
         e.preventDefault();
         e.stopPropagation();
         var $this = $(this);
@@ -296,60 +305,50 @@
           opt.moveIconObj.timeout = setTimeout(function () {
             // 生成一个半透明的指示位置图标
             var $flagDom = $($this.clone());
-            $flagDom.removeClass('icondesktopbox');
             opt.moveIconObj.$flagDom = $flagDom;
-            // 指示位置图标透明度
-            $flagDom.css('opacity', 0.3);
-            // 拖动图标在指示位置图标之上
-            $this.css({'zIndex': 10});
-            // 指示位置图标加入到dom中
-            $this.parents('.icondesktop-slidebox').append($flagDom);
+            opt.flagObj = $flagDom;
             // ********************* 拖动状态下的盒子/图标变化 开始 ***********************
             // 盒子稍微放大
             var iconLeft = parseInt($this.css('left'));
             var iconTop = parseInt($this.css('top'));
             var iconWidth = parseInt($this.css('width'));
             var iconHeight = parseInt($this.css('height'));
-            var iconWidthChange = Math.ceil(iconWidth * opt.closeBoxEnlargeScale);
-            var iconHeightChange = Math.ceil(iconHeight * opt.closeBoxEnlargeScale);
+            if ($this.hasClass('iconinbox')) {
+              // 如果此时是在盒子里(上方条件)，则需要将盒子里的位置换算成桌面上的位置
+              iconLeft += opt.currentPageIndex * opt.desktopWidth + opt.openBoxMarginLeft;
+              iconTop += opt.openBoxMarginTop;
+            }
+            // 指示位置图标透明度
+            $this.css({'opacity': 0.3, 'cursor': 'move'});
+            // 拖动图标在指示位置图标之上
+            $flagDom.css({
+              'left': iconLeft + 'px',
+              'top': iconTop + 'px',
+              'zIndex': 10, 
+              'cursor': 'move'
+            });
+            // 指示位置图标加入到dom中
+            $this.parents('.icondesktop-slidebox').append($flagDom);
+            // $this.removeClass('icondesktopbox');
             // TODO 此处可能有问题
             $this.attr({
-              'isMouseDownMove': true,
+              'isMouseDownMove': true
+            });
+            $flagDom.attr({
               'prevLeft': iconLeft + 'px',
               'prevTop': iconTop + 'px',
               'prevWidth': iconWidth + 'px',
               'prevHeight': iconHeight + 'px'
-            }).css({
-              'cursor': 'move'
-              // 'left': iconLeft - iconWidthChange + 'px',
-              // 'top': iconTop - iconHeightChange + 'px'
             });
             if ($this.hasClass('iconbox-a')) {
               // 如果是图标(上方条件)，则调整图标大小
-              // $this.css({
-              //   'width': iconWidth + iconWidthChange * 2 + 'px',
-              //   'height': iconHeight + iconHeightChange * 2 + 'px'
-              // });
-              enlargeDom($this, iconLeft, iconTop, opt);
+              enlargeDom($flagDom, iconLeft, iconTop, iconWidth, iconHeight, opt);
             } else if ($this.hasClass('iconbox-tool')) {
               // 如果是工具(上方条件)，则调整工具大小
-              // $this.css({
-              //   'width': $this.width() + iconWidthChange * 2 + 'px',
-              //   'height': $this.height() + iconHeightChange * 2 + 'px'
-              // });
-              enlargeDom($this, iconLeft, iconTop, opt);
+              enlargeDom($flagDom, iconLeft, iconTop, iconWidth, iconHeight, opt);
             } else {
               // 如果是盒子(上方条件)，则调整盒子的大小
-              // $this.css({
-              //   // 'padding': opt.closeBoxPadding + iconWidthChange + 'px'
-              //   'width': iconWidth + iconWidthChange * 2 + 'px',
-              //   'height': iconHeight + iconHeightChange * 2 + 'px'
-              // });
-              // // 调整盒子内容器的内边距
-              // $this.find('.iconbox-area__container').css({
-              //   'padding': opt.closeBoxPadding + iconWidthChange + 'px'
-              // });
-              enlargeDom($this, iconLeft, iconTop, opt, true);
+              enlargeDom($flagDom, iconLeft, iconTop, iconWidth, iconHeight, opt, true);
             }
             // ********************* 拖动状态下的盒子/图标变化 结束 ***********************
           }, mouseDownIconDuration);
@@ -362,7 +361,7 @@
         var $this = $(this);
         if (opt.ableDrag && opt.moveObj) {
           // 取消盒子/图标移动
-          cancelIconMove(opt.moveObj, opt);
+          cancelIconMove(opt);
         }
       });
       // 右键菜单
@@ -375,15 +374,15 @@
         }).show();
         return false;//取消右键点击的默认事件
       }
-      $(this).off('click', '.icondesktop-menuitem').on('click', '.icondesktop-menuitem', function (e) {
-        var $this = $(this);
-        if ($this.hasClass('icondesktop-menuitem__refresh')) {
-          refreshDesktop($root, opt);
-        }
-      });
+      // $(this).off('click', '.icondesktop-menuitem').on('click', '.icondesktop-menuitem', function (e) {
+      //   var $this = $(this);
+      //   if ($this.hasClass('icondesktop-menuitem__refresh')) {
+      //     refreshDesktop($root, opt);
+      //   }
+      // });
     });
     var $root = $(this);
-    return {
+    var returnVal = {
       // 获得所有选中的图标的数据
       getCheckedData: function () {
         var checkedData = [];
@@ -478,6 +477,7 @@
         return d;
       }
     }
+    return returnVal;
   };
 
   /**
@@ -812,10 +812,16 @@
     $root.append($pagePanel);
     $root.find('.icondesktop-slidebox').append(opt.$closeBoxBackground);
     // 添加菜单
-    var $menu = $('<div class="icondesktop-menu">'
-      + '<dl class="icondesktop-menulist">'
-        + '<dd class="icondesktop-menuitem icondesktop-menuitem__refresh">刷新</dd>'
-      +'</dl></div>');
+    var $menu = $('<div class="icondesktop-menu"></div>');
+    var $menuList = $('<dl class="icondesktop-menulist"></dl>');
+    for (var i = 0; i < opt.menus.length; i++) {
+      var element = opt.menus[i];
+      var extraClass = element.extraClass ? (' ' + element.extraClass) : '';
+      var $menuItem = $('<dd class="icondesktop-menuitem' + extraClass + '">' + element.title + '</dd>');
+      bindMenuClick($menuItem, element.doClick);
+      $menuList.append($menuItem);
+    }
+    $menu.append($menuList);
     $menu.hide();
     $root.append($menu);
   }
@@ -894,8 +900,10 @@
       //     'top': Math.floor(index / 3) * (opt.thumbnailHeight + opt.verIconInCloseBoxMargin) + opt.closeBoxPadding + 'px'
       //   });
       // });
-      var dataBox = getDataByLocation($box.attr('location'), opt.data, opt.locationObj);
-      recoverLocationInBox(dataBox, opt);
+      $box.each(function (index, element) {
+        var dataBox = getDataByLocation($(element).attr('location'), opt.data, opt.locationObj);
+        recoverLocationInBox(dataBox, opt);
+      });
       // $box.find('.iconbox-area__container').css({
       //   'padding': opt.closeBoxPadding
       // });
@@ -928,7 +936,7 @@
           'top': point.top + 'px',
           'width': opt.thumbnailWidth + 'px', 
           'height': opt.thumbnailHeight + 'px'
-        }, 'fast');
+        });
       });
     } else {
       // 如果是直接定位(上方条件)
@@ -1061,116 +1069,48 @@
 
   /**
    * 移动图标
-   * @param  {[type]} $this [description]
    * @param  {[type]} opt   [description]
    * @param  {[type]} e     [description]
    * @return {[type]}       [description]
    */
-  function moveIcon($this, opt, e) {
+  function moveIcon(opt, e) {
+    var $this = opt.moveObj;
+    var $flagDom = opt.flagObj;
     var moveIconObj = opt.moveIconObj;
     // 图标处于在移动状态
     if ($this.attr('isMouseDownMove')) {
       moveIconObj.mouseDownIconCurrentPoint.x = Math.floor(e.pageX);
       moveIconObj.mouseDownIconCurrentPoint.y = Math.floor(e.pageY);
       // 更新盒子/图标的移动位置
-      $this.css({
-        'left': parseInt($this.css('left')) + moveIconObj.mouseDownIconCurrentPoint.x - moveIconObj.mouseDownIconPrevPoint.x + 'px',
-        'top': parseInt($this.css('top')) + moveIconObj.mouseDownIconCurrentPoint.y - moveIconObj.mouseDownIconPrevPoint.y + 'px'
+      $flagDom.css({
+        'left': parseInt($flagDom.css('left')) + moveIconObj.mouseDownIconCurrentPoint.x - moveIconObj.mouseDownIconPrevPoint.x + 'px',
+        'top': parseInt($flagDom.css('top')) + moveIconObj.mouseDownIconCurrentPoint.y - moveIconObj.mouseDownIconPrevPoint.y + 'px'
       });
       if (!moveIconObj.iconInterval) {
         // 如果没有开启检查盒子/图标所在位置区域的定时器，则开启，固定为500毫秒检测一次所在位置区域
         moveIconObj.iconInterval = setInterval(function () {
-          // console.log();
-          var moveLocation = getMoveLocation($this, getIconData($this, opt).size, opt.currentPageIndex, opt.desktopWidth, opt.separationLine, opt.verSize, opt.horSize);
+          var moveLocation;
+          var desktopIconData;
+          if ($flagDom.hasClass('icondesktopbox')) {
+            // 在桌面上
+            desktopIconData = getIconData($flagDom, opt);
+            moveLocation = getMoveLocation($flagDom, desktopIconData.size, opt.currentPageIndex, opt.desktopWidth, opt.separationLine, opt.verSize, opt.horSize);
+          } else {
+            // 在盒子里
+            moveLocation = getMoveLocation($flagDom, getIconData($this, opt).size, opt.currentPageIndex, opt.desktopWidth, opt.separationBoxLine, opt.verIconSize, opt.horIconSize);
+          }
           if (!isMoveLocationActive(moveLocation, opt)) {
             // 如果移动位置不生效(上方条件)
             // 则不进行后续操作
             return;
           }
-          moveToLocation($this, getIconData($this, opt), opt.data, opt);
-
-          return;
-
-          // 获取盒子/图标所在位置区域的盒子/图标，即被遮挡处在下方的盒子/图标
-          var $iconBelow = getIconBelow($this);
-          moveIconObj.$iconBelow = $iconBelow;
-          if (!$iconBelow) {
-            // 如果此时不存在盒子/图标，说明没有在其他盒子/图标上，则恢复之前被遮挡的盒子/图标的状态，并显示指示位置图标
-            recoverIconBelow($this, opt);
-            // 删除被遮挡物体的指示图标
-            removeFlagDomBelow(moveIconObj);
-            moveIconObj.$flagDom.show();
-          } else if ($iconBelow.css('left') != moveIconObj.$prevIconBelow.css('left')
-            || $iconBelow.css('top') != moveIconObj.$prevIconBelow.css('top')) {
-            // console.log($iconBelow.css('left') + '---' + moveIconObj.$prevIconBelow.css('left'))
-            // 如果当前被遮挡的盒子/图标与之前的不同，则说明进入了一个盒子/图标的范围，此时是通过前后图标的位置来确定的
-            // 恢复状态，避免定时器间隔过长，间隔中发生过多变化，导致响应结果不正确
-            recoverIconBelow($this, opt, true);
-            
-            // 设置当前图标处于悬浮状态
-            moveIconObj.isSuspended = true;
-            moveIconObj.$prevIconBelow = $iconBelow;
-            if ($this.hasClass('iconbox__close')) {
-              // 如果被拖动物体是一个盒子
-              // 删除被遮挡物体的指示图标
-              removeFlagDomBelow(moveIconObj);
-              // 创建一个被遮挡的图标的指示位置图标
-              var $flagDomBelow = $($iconBelow.clone());
-              $flagDomBelow.removeClass('icondesktopbox');
-              moveIconObj.$flagDomBelow = $flagDomBelow;
-              // 指示位置图标透明度
-              $flagDomBelow.css('opacity', 0.3);
-              // 指示位置图标加入到dom中
-              $this.parents('.icondesktop-slidebox').append($flagDomBelow);
-              // 指示位置图标移动到拖动物体的原位置
-              $flagDomBelow.stop().animate({
-                'left': $this.attr('prevLeft'),
-                'top': $this.attr('prevTop')
-              });
-              // 隐藏指示位置图标
-              moveIconObj.$flagDom.hide();
-            } else if ($iconBelow.hasClass('iconbox-a')) {
-              // 如果是在一个图标上方，则图标加一个放大的盒子框
-              // 提高高度，是图标置于盒子框的上方
-              $iconBelow.css({'zIndex': 2});
-              opt.$closeBoxBackground.css({
-                'left': $iconBelow.css('left'),
-                'top': $iconBelow.css('top'),
-                'width': opt.closeBoxWidth + 'px',
-                'height': opt.closeBoxHeight + 'px',
-                'display': 'block'
-              })
-              enlargeDom(opt.$closeBoxBackground, parseInt($iconBelow.css('left')), parseInt($iconBelow.css('top')), opt);
-              // .stop().animate({
-              //   'left': parseInt($iconBelow.css('left')) - opt.closeBoxEnlargeWidth + 'px',
-              //   'top': parseInt($iconBelow.css('top')) - opt.closeBoxEnlargeHeight + 'px',
-              //   'width': opt.closeBoxWidth + opt.closeBoxEnlargeWidth * 2 + 'px',
-              //   'height': opt.closeBoxHeight + opt.closeBoxEnlargeHeight * 2 + 'px'
-              // }, 'fast');
-              // 隐藏指示位置图标
-              moveIconObj.$flagDom.hide();
-            } else if ($iconBelow.hasClass('iconbox__close')) {
-              // 如果是在一个盒子上方，则盒子放大
-              var iconLeft = parseInt($iconBelow.css('left'));
-              var iconTop = parseInt($iconBelow.css('top'));
-              var iconWidth = parseInt($iconBelow.css('width'));
-              var iconHeight = parseInt($iconBelow.css('height'));
-              // var iconWidthChange = Math.ceil(iconWidth * opt.closeBoxEnlargeScale);
-              // var iconHeightChange = Math.ceil(iconHeight * opt.closeBoxEnlargeScale);
-              // 先记录盒子的当前状态，然后再变换，便于恢复
-              $iconBelow.attr({
-                'prevLeft': iconLeft + 'px',
-                'prevTop': iconTop + 'px',
-                'prevWidth': iconWidth + 'px',
-                'prevHeight': iconHeight + 'px'
-              }).animate({
-                'left': iconLeft - opt.closeBoxEnlargeWidth + 'px',
-                'top': iconTop - opt.closeBoxEnlargeHeight + 'px',
-                'padding': opt.closeBoxPadding + opt.closeBoxEnlargeWidth + 'px'
-              }, 'fast');
-              // 隐藏指示位置图标
-              moveIconObj.$flagDom.hide();
-            }
+          if ($flagDom.hasClass('icondesktopbox')) {
+            // 在桌面上
+            moveToLocation($flagDom, desktopIconData, opt.data, opt);
+          } else {
+            // 在盒子里
+            var index = getIconIndex($this.parents('.icondesktopbox'), opt);
+            moveToLocationInBox($flagDom, getIconData($this, opt), opt.data[index], opt);
           }
         }, 500);
       }
@@ -1181,12 +1121,12 @@
 
   /**
    * 取消移动
-   * @param  {[type]} $this       [description]
    * @param  {[type]} opt         [description]
    * @return {[type]}             [description]
    */
-  function cancelIconMove($this, opt) {
-    opt.moveObj = null;
+  function cancelIconMove(opt) {
+    var $this = opt.moveObj;
+    var $flagDom = opt.flagObj;
     var moveIconObj = opt.moveIconObj;
     // 是否鼠标按下
     if ($this.attr('isMouseDownIcon')) {
@@ -1207,106 +1147,43 @@
         if (moveIconObj.$prevIconBelow === $iconBelow) {
           // 如果拖动盒子/图标与上一个状态均在同一个盒子/图标上(上方条件)
           // 则进行分组
-          var dstData = groupData(opt.data, getIconIndex($this, opt), getIconIndex($iconBelow, opt));
+          var dstData = groupData(opt.data, getIconIndex($this, opt), getIconIndex($iconBelow, opt), opt);
           // 此处$this与$iconBelow被删除重新创建，所以重新赋值
           $groupObj = groupDoms($this, $iconBelow, opt, dstData);
+          opt.flagObj.remove();
           $this = $groupObj.$this;
           $iconBelow = $groupObj.$iconBelow;
-          recoverIconBelow($this, opt);
+          recoverIconBelow(opt);
           moveFlag = 2;
 
         } else {
           // 如果拖动盒子/图标与上一个状态不在同一个盒子/图标上(上方条件)，则还原
-          var theLeft = parseInt(moveIconObj.$flagDom.css('left'));
-          var theTop = parseInt(moveIconObj.$flagDom.css('top'));
-          var theWidth = parseInt(moveIconObj.$flagDom.css('width'));
-          var theHeight = parseInt(moveIconObj.$flagDom.css('height'));
+          var theLeft = parseInt($this.css('left'));
+          var theTop = parseInt($this.css('top'));
+          var theWidth = parseInt($this.css('width'));
+          var theHeight = parseInt($this.css('height'));
+          if ($this.hasClass('iconinbox')) {
+            // 如果此时是在盒子里(上方条件)，则需要将盒子里的位置换算成桌面上的位置
+            theLeft += opt.currentPageIndex * opt.desktopWidth + opt.openBoxMarginLeft;
+            theTop += opt.openBoxMarginTop;
+          }
           if ($this.hasClass('iconbox-a')) {
             // 如果是图标(上方条件)，则调整图标大小
-            // $this.animate({
-            //   // 'left': $this.attr('prevLeft'),
-            //   // 'top': $this.attr('prevTop'),
-            //   // 'width': $this.attr('prevWidth'),
-            //   // 'height': $this.attr('prevHeight')
-            //   'left': leftPx,
-            //   'top': topPx,
-            //   'width': widthPx,
-            //   'height': heightPx
-            // }, {
-            //   'duration': 'fast',
-            //   'easing': 'swing',
-            //   'step': function () {
-            //     $this.css('overflow', 'visible');
-            //   },
-            //   'complete': function () {
-            //     $this.css({
-            //       'cursor': 'pointer',
-            //       'zIndex': 1
-            //     });
-            //   }
-            // });
-            recoverDom($this, theLeft, theTop, theWidth, theHeight);
+            recoverDom($flagDom, $this, theLeft, theTop, theWidth, theHeight);
           } else if ($this.hasClass('iconbox__close')) {
             // 如果是盒子(上方条件)，则调整盒子的大小
-            // $this.animate({
-            //   // 'left': $this.attr('prevLeft'),
-            //   // 'top': $this.attr('prevTop'),
-            //   'left': moveIconObj.$flagDom.css('left'),
-            //   'top': moveIconObj.$flagDom.css('top'),
-            //   'width': moveIconObj.$flagDom.css('width'),
-            //   'height': moveIconObj.$flagDom.css('height')
-            //   // 'padding': opt.closeBoxPadding + 'px'
-            // }, {
-            //   'duration': 'fast',
-            //   'easing': 'swing',
-            //   'step': function () {
-            //     $this.css('overflow', 'visible');
-            //   },
-            //   'complete': function () {
-            //     $this.css({
-            //       'cursor': 'pointer',
-            //       'zIndex': 1
-            //     });
-            //   }
-            // });
-            // // 调整盒子内容器的内边距
-            // $this.find('.iconbox-area__container').animate({
-            //   'paddingRight': 0,
-            //   'padding': opt.closeBoxPadding + 'px'
-            // }, 'fast', function () {
-            //   $(this).css({
-            //     'paddingRight': opt.closeBoxPadding + 'px'
-            //   });
-            // });
-            recoverDom($this, theLeft, theTop, theWidth, theHeight, true, opt.closeBoxPadding);
+            recoverDom($flagDom, $this, theLeft, theTop, theWidth, theHeight, true, opt.closeBoxPadding);
+            clearDomPrevAttr($this);
           } else if ($this.hasClass('iconbox-tool')) {
             // 如果是工具(上方条件)，则调整工具大小
-            // $this.animate({
-            //   'left': moveIconObj.$flagDom.css('left'),
-            //   'top': moveIconObj.$flagDom.css('top'),
-            //   'width': moveIconObj.$flagDom.css('width'),
-            //   'height': moveIconObj.$flagDom.css('height')
-            // }, {
-            //   'duration': 'fast',
-            //   'easing': 'swing',
-            //   'step': function () {
-            //     // $this.css('overflow', 'visible');
-            //   },
-            //   'complete': function () {
-            //     $this.css({
-            //       'cursor': 'pointer',
-            //       'zIndex': 1
-            //     });
-            //   }
-            // });
-            recoverDom($this, theLeft, theTop, theWidth, theHeight);
+            recoverDom($flagDom, $this, theLeft, theTop, theWidth, theHeight);
           }
-          recoverIconBelow($this, opt, true);
+          recoverIconBelow(opt, true);
         }
         moveIconObj.finishTime = new Date().getTime();
         // 删除拖动物体的指示图标
         if (moveIconObj.$flagDom) {
-          moveIconObj.$flagDom.remove();
+          // moveIconObj.$flagDom.remove();
           moveIconObj.$flagDom = null;
         }
         // 删除遮挡物体的指示图标
@@ -1324,6 +1201,8 @@
         }
       }
     }
+    opt.moveObj = null;
+    opt.flagObj = null;
   }
 
   function removeFlagDomBelow(moveIconObj) {
@@ -1335,31 +1214,17 @@
 
   /**
    * 恢复下方盒子/图标的变大效果
-   * @param  {[type]} $this      [description]
    * @param  {[type]} opt        [description]
    * @param  {[type]} onlyEffect [description]
    * @return {[type]}            [description]
    */
-  function recoverIconBelow($this, opt, onlyEffect) {
+  function recoverIconBelow(opt, onlyEffect) {
     // // 隐藏悬浮在图标上时出现的盒子背景
-    // opt.$closeBoxBackground.hide();
-    // // 盒子背景还原
-    // var $prevIconBelow = moveIconObj.$prevIconBelow;
-    // if ($prevIconBelow.hasClass('iconbox__close') && $prevIconBelow.attr('prevLeft')) {
-    //   // 如果是盒子，并且记录有之前的位置信息，则恢复
-    //   $prevIconBelow.stop().css({
-    //     'left': $prevIconBelow.attr('prevLeft'),
-    //     'top': $prevIconBelow.attr('prevTop'),
-    //     'padding': opt.closeBoxPadding + 'px'
-    //   });
-    // }
     cancelGroupIcons(opt);
     cancelJoinBox(opt);
     if (!onlyEffect) {
       var moveIconObj = opt.moveIconObj;
       moveIconObj.$prevIconBelow = moveIconObj.$empty;
-      // moveIconObj.isSuspended = false;
-      // showFlagDom(opt);
     }
   }
 
@@ -1420,13 +1285,35 @@
 
   /**
    * 获得图标在盒子中的序数
-   * @param  {[type]} $icon [description]
-   * @param  {[type]} opt   [description]
-   * @return {[type]}       [description]
+   * @param  {[type]} $icon    [description]
+   * @param  {[type]} location [description]
+   * @param  {[type]} opt      [description]
+   * @return {[type]}          [description]
    */
-  function getIconChildIndex($icon, opt) {
-    // 目前是三个其他图标
-    return $icon.index() - opt.otherThingNumInBox;
+  function getIconChildIndex($icon, location, opt) {
+    // // 目前是三个其他图标
+    // return $icon.index() - opt.otherThingNumInBox;
+    
+    var locationIconObj = opt.locationBoxObj[location];
+    var iconLocation = $icon.attr('location');
+    // 占用位置数组
+    var arrLocation = [];
+    for (var key in locationIconObj) {
+      arrLocation.push(createLocationRelativeInfo(key, '1x1'));
+    }
+    arrLocation.sort(sortByLocation);
+    var i = 0;
+    for (; i < arrLocation.length; i++) {
+      var element = arrLocation[i];
+      if (element.location === iconLocation) {
+        break;
+      }
+    }
+    // 没有匹配上
+    if (i >= arrLocation.length) {
+      return null;
+    }
+    return i;
   }
 
   /**
@@ -1444,9 +1331,14 @@
     } else {
       // 如果是盒子里面的图标
       // 第一层
-      iconData = srcData[getIconIndex($icon.parent(), opt)];
+      iconData = srcData[getIconIndex($icon.parents('.icondesktopbox'), opt)];
+      var location = iconData.location;
+      var index = getIconChildIndex($icon, location, opt);
+      if (index === null) {
+        return null;
+      }
       // 第二层
-      iconData = data.children[getIconChildIndex($icon, opt)];
+      iconData = iconData.children[index];
     }
     return iconData;
   }
@@ -1466,21 +1358,22 @@
     } else {
       // 如果是盒子里面的图标
       // 第一层
-      var data = srcData[getIconIndex($icon.parent(), opt)];
+      var data = srcData[getIconIndex($icon.parents('.icondesktopbox'), opt)];
       // 第二层
-      var index = getIconChildIndex($icon, opt);
+      var index = getIconChildIndex($icon, data.location, opt);
       data.children.splice(index, 1);
     }
   }
 
   /**
    * 合并节点数据，仅限于$this是图标，$iconBelow是盒子/图标
-   * @param  {[type]} data     基本数据
-   * @param  {[type]} srcIndex 移动的图标的序数
-   * @param  {[type]} dstIndex 目标图标的序数
+   * @param  {[type]} data     [基本数据]
+   * @param  {[type]} srcIndex [移动的图标的序数]
+   * @param  {[type]} dstIndex [目标图标的序数]
+   * @param  {[type]} opt      [opt]
    * @return {[type]}          [void]
    */
-  function groupData(data, srcIndex, dstIndex) {
+  function groupData(data, srcIndex, dstIndex, opt) {
     var srcData = data[srcIndex];
     var dstData = data[dstIndex];
     var newData;
@@ -1493,6 +1386,9 @@
         location: dstData.location,
         children: [dstData, srcData]
       };
+      // 加上位置信息
+      dstData.location = getFirstEmptyLocationInBox(newData.location, opt);
+      srcData.location = getFirstEmptyLocationInBox(newData.location, opt);
       // 那么判断srcIndex与dstIndex哪个大，先删除大的，序号将不会受到影响
       if (srcIndex > dstIndex) {
         // 删除后面的数据
@@ -1512,14 +1408,16 @@
       // 添加到盒子中
       dstData.children.push(srcData);
       newData = dstData;
+      // 加上位置信息
+      srcData.location = getFirstEmptyLocationInBox(newData.location, opt);
     }
     return newData;
   }
 
   /**
    * 合并节点，仅限于$this是图标，$iconBelow是盒子/图标
-   * @param  {[type]} $this      被拖动的图标
-   * @param  {[type]} $iconBelow 被遮挡的图标
+   * @param  {[type]} $this      [被拖动的图标]
+   * @param  {[type]} $iconBelow [被遮挡的图标]
    * @param  {[type]} opt        [description]
    * @param  {[type]} newData    [description]
    * @return {[type]}            {$this, $iconBelow}
@@ -1538,31 +1436,38 @@
       $newIconBox.insertAfter($iconBelow);
       // 删除之前的两个图标
       var $temp = $iconBelow;
-      $iconBelow = $newIconBox.children('.iconbox-a').eq(0);
+      $iconBelow = $newIconBox.find('.iconbox-a').eq(0);
       $temp.remove();
       $temp = $this;
-      $this = $newIconBox.children('.iconbox-a').eq(1);
+      $this = $newIconBox.find('.iconbox-a').eq(1);
       $temp.remove();
+      setLocations($iconBelow, newData.children[0], opt);
+      setLocations($this, newData.children[1], opt);
     } else {
       // 在一个盒子上(上方条件)，则加入到盒子里
-      // 改成小图标样式
+      // 改成小图标样式，并调整位置
+      var dataIcon = newData.children[newData.children.length - 1];
+      setLocations($this, dataIcon, opt);
+      var point = getLocationInCloseBox(newData.children.length - 1, opt);
       $this.css({
-        'cursor': '',
-        'width': opt.thumbnailWidth + 'px',
+        'left': point.left + 'px',
+        'top': point.top + 'px',
+        'width': opt.thumbnailWidth + 'px', 
         'height': opt.thumbnailHeight + 'px',
-        'left': '',
-        'top': '',
+        'opacity': '',
+        'cursor': '',
         'zIndex': ''
-        // 'margin': opt.verIconInCloseBoxMargin + 'px ' + opt.horIconInCloseBoxMargin + 'px',
-        // 'position': 'relative'
-      }).removeClass('icondesktopbox').find('.iconbox-checkbox').hide();
+      }).removeClass('icondesktopbox').addClass('iconinbox').find('.iconbox-checkbox').hide();
       // 重新绑定多选框点击事件
       bindCheckboxClick($this.children('.iconbox-checkbox'), newData.children[newData.children.length - 1], newData);
       $this.appendTo($iconBelow.find('.iconbox-area__container'));
       // 判断是否已经超过9个图标
-      if ($this.index() > 8 + opt.otherThingNumInBox) {
+      if ($this.index() > 8) {
         $this.hide();
+      } else {
+        $this.show();
       }
+      console.log($this.is(':hidden'))
       // 更新盒子的角标
       updateBoxSuperscript($iconBelow, opt);
       // 隐藏移入的图标的角标
@@ -1732,10 +1637,14 @@
         // 如果当前桌面有盒子打开，则在盒子中插入图标
         var index = getIconIndex(opt.openBox.$box, opt);
         var boxData = opt.data[index];
+        // 添加位置信息
+        data.location = getFirstEmptyLocationInBox(boxData.location, opt);
         // 插入数据
         insertData(boxData.children, data);
         // 插入节点
         insertIcons(opt.openBox.$box, opt, data, boxData);
+        // 调整滚动条
+        adjustScrollBar(opt.openBox.$box.find('.iconbox-area__container'));
       } else {
         // 如果当前桌面没有盒子打开，则判断当前桌面是否有空位置
         if (false) {
@@ -1787,6 +1696,7 @@
     // 标题样式
     setTitleStyle($icon, opt);
 
+    setLocations($icon, dataIcon, opt, 'set');
     $box.find('.iconbox-area__container').append($icon);
   }
 
@@ -2044,9 +1954,9 @@
       // 循环列
       for (var j = 0; j < horIconSize; j++) {
         var locationPoint = getLocationPointInBox(i, j, opt);
-        var top = locationPoint.y;
+        var top = locationPoint.y + opt.openBoxMarginTop;
         var bottom = top + opt.closeBoxHeight;
-        var left = locationPoint.x;
+        var left = locationPoint.x + opt.openBoxMarginLeft;
         var right = left + opt.closeBoxWidth
         boxGrids['g_' + i + '_' + j] = {
           top: top,
@@ -2054,16 +1964,22 @@
           left: left,
           right: right
         };
-        if (i == 0) {
-          // 如果当前是第一行(上方条件)
-          // 则记录下所有纵向分割线
-          separationBoxLine.lineX.push(left - halfBoxWidth);
+        if (i === 0) {
+          // 如果当前是第一行(上方条件)，则记录下所有纵向分割线
+          if (j === 0) {
+            separationBoxLine.lineX.push(opt.openBoxMarginLeft);
+          } else {
+            separationBoxLine.lineX.push(left - halfBoxWidth);
+          }
           separationBoxLine.lineX.push(left + halfBoxWidth);
         }
-        if (j == 0) {
-          // 如果当前是第一页的第一列(上方条件)
-          // 则记录下所有的横向分割线
-          separationBoxLine.lineY.push(top - halfBoxHeight);
+        if (j === 0) {
+          // 如果当前是第一页的第一列(上方条件)，则记录下所有的横向分割线
+          if (i === 0) {
+            separationBoxLine.lineY.push(opt.openBoxMarginTop);
+          } else {
+            separationBoxLine.lineY.push(top - halfBoxHeight);
+          }
           separationBoxLine.lineY.push(top + halfBoxHeight);
         }
       } // 循环列结束
@@ -2277,13 +2193,13 @@
 
   /**
    * [setLocations 设置桌面上节点的位置]
-   * @param {[type]} $dom   [description]
-   * @param {[type]} data   [description]
-   * @param {[type]} opt    [description]
-   * @param {[type]} action [description]
+   * @param {[type]} $dom    [description]
+   * @param {[type]} domData [description]
+   * @param {[type]} opt     [description]
+   * @param {[type]} action  [description]
    */
-  function setLocations($dom, data, opt, action) {
-    var locationInfo = parseLocationInfo(data.location);
+  function setLocations($dom, domData, opt, action) {
+    var locationInfo = parseLocationInfo(domData.location);
     var point;
     if (locationInfo.page === -1) {
       // 位置页数是-1(上方条件)，则说明在盒子里
@@ -2293,12 +2209,12 @@
       point = getLocationPoint(locationInfo.page, locationInfo.row, locationInfo.col, opt);
     }
     // 将dom与数据绑定
-    data.$dom = $dom;
+    domData.$dom = $dom;
     // 节点设置位置属性
     setLocationAttr($dom, createLocation(locationInfo.page, locationInfo.row, locationInfo.col));
 
     // var locationDom = opt.locationDom;
-    // locationDom[data.location] = $dom;
+    // locationDom[domData.location] = $dom;
     if (action === 'set') {
       $dom.css({
         'left': point.x + 'px',
@@ -2614,8 +2530,10 @@
     } else {
       // 如果物体完全在中央容器内(上方条件)
       // 则计算新的data
+      // console.log(domData.location + '-' + moveLocation.location)
       if (domData.location === moveLocation.location) {
         // 还没有移出当前格子(上方条件)
+        console.log('cancel')
         cancelGroupAndJoin(opt);
       } else if (domData.img) {
         // 如果移动的物体是一个图标(上方条件)
@@ -2624,15 +2542,16 @@
           var theData = getDataByLocation(moveLocation.location, data, opt.locationObj);
           if (theData == null) {
             // 如果该位置为空(上方条件)，则直接移动过来
-            moveTool(domData, data, moveLocation, opt.locationObj, opt);
+            moveTool(opt.flagObj, domData, data, moveLocation, opt.locationObj, opt);
           } else if (theData.img) {
             // 如果是图标(上方条件)，则显示放大的盒子背景
             // groupIcons(domData, data, moveLocation, opt);
+            console.log('enlarge')
             cancelJoinBox(opt);
             showGroupBox(theData.$dom, opt);
           } else if (theData.type === 'tool') {
             // 如果是工具(上方条件)，则移动
-            moveIconOrBox(domData, data, moveLocation, opt.locationObj, opt);
+            moveIconOrBox(opt.flagObj, domData, data, moveLocation, opt.locationObj, opt);
           } else {
             // 除了图标、工具，就剩下盒子(上方条件)，则盒子放大
             cancelGroupIcons(opt);
@@ -2644,18 +2563,18 @@
         } else {
           // 如果是在前方的状态(上方条件)
           // 则判断移动物体与相关物体的前后关系
-          moveIconOrBox(domData, data, moveLocation, opt.locationObj, opt);
+          moveIconOrBox(opt.flagObj, domData, data, moveLocation, opt.locationObj, opt);
         }
       } else if (domData.type === 'tool') {
         // 如果移动的物体是一个工具(上方条件)
         // 在前方的状态与在一起的状态处理相同
         // 则判断移动物体与相关物体的前后关系
-        moveTool(domData, data, moveLocation, opt.locationObj, opt);
+        moveTool(opt.flagObj, domData, data, moveLocation, opt.locationObj, opt);
       } else {
         // 如果移动的物体是一个盒子(上方条件)
         // 在前方的状态与在一起的状态处理相同
         // 则判断移动物体与相关物体的前后关系
-        moveIconOrBox(domData, data, moveLocation, opt.locationObj, opt);
+        moveIconOrBox(opt.flagObj, domData, data, moveLocation, opt.locationObj, opt);
       }
     }
   }
@@ -2669,11 +2588,14 @@
    * @return {[type]}          [description]
    */
   function moveToLocationInBox($dom, domData, children, opt) {
-    var moveLocation = getMoveLocation($dom, domData.size, opt.currentPageIndex, opt.desktopWidth, opt.separationLine, opt.verSize, opt.horSize);
+    var moveLocation = getMoveLocation($dom, domData.size, opt.currentPageIndex, opt.desktopWidth, opt.separationBoxLine, opt.verSize, opt.horSize);
     var pos = moveLocation.pos;
+    debugger
     if (pos === 'left' || pos === 'right' || pos === 'top' || pos === 'bottom') {
       // 如果移出盒子(上方条件)
       console.log('移出盒子')
+      closeIconBox(domData.$dom.parents('.icondesktopbox'), opt);
+      $dom.removeClass('iconinbox').addClass('icondesktopbox');
     } else if (pos === 'over') {
       // 如果放不下(上方条件)，则不作任何处理
       
@@ -2690,10 +2612,11 @@
           var theData = getDataByLocation(moveLocation.location, children, opt.locationObj);
           if (theData == null) {
             // 如果该位置为空(上方条件)，则直接移动过去
-            moveTool(domData, children, moveLocation, opt.locationBoxObj[domData.location], opt);
+            moveTool(opt.flagObj, domData, children, moveLocation, opt.locationBoxObj[domData.location], opt);
           } else if (theData.img) {
             // 如果是图标(上方条件)，则移动过去
-            moveIconOrBox(domData, children, moveLocation, opt.locationBoxObj[domData.location], opt);
+            console.log(domData.location)
+            moveIconOrBox(opt.flagObj, domData, children, moveLocation, opt.locationBoxObj[domData.location], opt);
           } else if (theData.type === 'tool') {
             // 如果是工具(上方条件)，目前不可能
             
@@ -2704,7 +2627,7 @@
         } else {
           // 如果是在前方的状态(上方条件)
           // 则判断移动物体与相关物体的前后关系
-          moveIconOrBox(domData, children, moveLocation, opt.locationBoxObj[domData.location], opt);
+          moveIconOrBox(opt.flagObj, domData, children, moveLocation, opt.locationBoxObj[domData.location], opt);
         }
       } else if (domData.type === 'tool') {
         // 如果移动的物体是一个工具(上方条件)，目前不可能
@@ -2731,24 +2654,11 @@
     var $prevIconBelow = moveIconObj.$prevIconBelow;
     if ($prevIconBelow.hasClass('iconbox__close') && $prevIconBelow.attr('prevLeft')) {
       // 如果是盒子，并且记录有之前的位置信息(上方条件)，则恢复
-      // $prevIconBelow.stop().css({
-      //   'left': $prevIconBelow.attr('prevLeft'),
-      //   'top': $prevIconBelow.attr('prevTop'),
-      //   'width': opt.closeBoxWidth + 'px',
-      //   'height': opt.closeBoxHeight + 'px'
-      //   // 'padding': opt.closeBoxPadding + 'px'
-      // });
-      // // 调整盒子内容器的内边距
-      // $prevIconBelow.find('.iconbox-area__container').css({
-      //   'padding': opt.closeBoxPadding
-      // });
-
       var theLeft = parseInt($prevIconBelow.attr('prevLeft'));
       var theTop = parseInt($prevIconBelow.attr('prevTop'));
       var theWidth = opt.closeBoxWidth;
       var theHeight = opt.closeBoxHeight;
-      recoverDom($prevIconBelow, theLeft, theTop, theWidth, theHeight, true, opt.closeBoxPadding);
-
+      recoverDom($prevIconBelow, null, theLeft, theTop, theWidth, theHeight, true, opt.closeBoxPadding);
       // 恢复后清除位置记录
       clearDomPrevAttr($prevIconBelow);
     }
@@ -2766,34 +2676,39 @@
     });
   }
 
-  function showFlagDom(opt) {
-    var moveIconObj = opt.moveIconObj;
-    // 清空前一个被遮挡的节点，因为该值只有在移入可能发生组合的时候才会发生改变，避免移出后发生组合
-    moveIconObj.$prevIconBelow = moveIconObj.$empty;
-    // 显示移动指示物
-    moveIconObj.$flagDom.show();
-  }
+  // function showFlagDom(opt) {
+  //   var moveIconObj = opt.moveIconObj;
+  //   // 清空前一个被遮挡的节点，因为该值只有在移入可能发生组合的时候才会发生改变，避免移出后发生组合
+  //   moveIconObj.$prevIconBelow = moveIconObj.$empty;
+  //   // 显示移动指示物
+  //   showFlagDom(opt);
+  // }
 
   function cancelGroupAndJoin(opt) {
     cancelGroupIcons(opt);
     cancelJoinBox(opt);
+    var moveIconObj = opt.moveIconObj;
+    // 清空前一个被遮挡的节点，因为该值只有在移入可能发生组合的时候才会发生改变，避免移出后发生组合
+    moveIconObj.$prevIconBelow = moveIconObj.$empty;
     showFlagDom(opt);
   }
 
   /**
    * [moveIconOrBox 移动图标或盒子的方法]
-   * @param  {[type]} domData      [description]
-   * @param  {[type]} data         [description]
+   * @param  {[type]} $flagDom     [移动的节点]
+   * @param  {[type]} domData      [节点data]
+   * @param  {[type]} data         [数组]
    * @param  {[type]} moveLocation [description]
    * @param  {[type]} opt          [description]
    * @return {[type]}              [description]
    */
-  function moveIconOrBox(domData, data, moveLocation, locationObj, opt) {
+  function moveIconOrBox($flagDom, domData, data, moveLocation, locationObj, opt) {
     cancelGroupAndJoin(opt);
     clearObj(locationObj);
     locationObj[moveLocation.location] = createLocationRelativeInfo(moveLocation.location, domData.size);
     clearDataLocation(data);
     domData.location = moveLocation.location;
+    setLocationAttr($flagDom, domData.location);
     setLocationAttr(domData.$dom, domData.location);
     
     var pages = opt.pages;
@@ -2808,13 +2723,14 @@
 
   /**
    * [moveTool 移动工具的方法]
+   * @param  {[type]} $flagDom     [移动的节点]
    * @param  {[type]} domData      [description]
    * @param  {[type]} data         [description]
    * @param  {[type]} moveLocation [description]
    * @param  {[type]} opt          [description]
    * @return {[type]}              [description]
    */
-  function moveTool(domData, data, moveLocation, locationObj, opt) {
+  function moveTool($flagDom, domData, data, moveLocation, locationObj, opt) {
     cancelGroupAndJoin(opt);
     // 清除工具原来位置的占用信息
     var occupiedLocations = getOccupiedLocations(domData.location, domData.size);
@@ -2850,6 +2766,7 @@
 
     // 修改移动工具对应数据的位置信息
     domData.location = moveLocation.location;
+    setLocationAttr($flagDom, domData.location);
     setLocationAttr(domData.$dom, domData.location);
 
     // debugger
@@ -2881,7 +2798,7 @@
     var moveIconObj = opt.moveIconObj;
     var $closeBoxBackground = opt.$closeBoxBackground;
     // 隐藏指示位置图标
-    moveIconObj.$flagDom.hide();
+    hideFlagDom(opt);
     moveIconObj.$iconBelow = $iconBelow;
     if ($iconBelow !== moveIconObj.$prevIconBelow) {
       // 如果当前位置所在图标与上一个位置所在图标不同(上方条件)，则显示
@@ -2894,32 +2811,30 @@
         'height': opt.closeBoxHeight + 'px',
         'display': 'block'
       })
-      enlargeDom($closeBoxBackground, parseInt($iconBelow.css('left')), parseInt($iconBelow.css('top')), opt);
-      // .stop().animate({
-      //   'left': parseInt($iconBelow.css('left')) - opt.closeBoxEnlargeWidth + 'px',
-      //   'top': parseInt($iconBelow.css('top')) - opt.closeBoxEnlargeHeight + 'px',
-      //   'width': opt.closeBoxWidth + opt.closeBoxEnlargeWidth * 2 + 'px',
-      //   'height': opt.closeBoxHeight + opt.closeBoxEnlargeHeight * 2 + 'px'
-      // }, 'fast');
+      var theLeft = parseInt($iconBelow.css('left'));
+      var theTop = parseInt($iconBelow.css('top'));
+      enlargeDom($closeBoxBackground, theLeft, theTop, opt.closeBoxWidth, opt.closeBoxHeight, opt);
     }
     moveIconObj.$prevIconBelow = $iconBelow;
   }
 
   /**
    * [enlargeDom 放大节点]
-   * @param  {[type]}  $dom  [description]
-   * @param  {[type]}  left  [description]
-   * @param  {[type]}  top   [description]
-   * @param  {[type]}  opt   [description]
-   * @param  {Boolean} isBox [description]
-   * @return {[type]}        [description]
+   * @param  {[type]}  $dom   [description]
+   * @param  {[type]}  left   [description]
+   * @param  {[type]}  top    [description]
+   * @param  {[type]}  width  [description]
+   * @param  {[type]}  height [description]
+   * @param  {[type]}  opt    [description]
+   * @param  {Boolean} isBox  [description]
+   * @return {[type]}         [description]
    */
-  function enlargeDom($dom, left, top, opt, isBox) {
+  function enlargeDom($dom, left, top, width, height, opt, isBox) {
     $dom.stop().animate({
       'left': left - opt.closeBoxEnlargeWidth + 'px',
       'top': top - opt.closeBoxEnlargeHeight + 'px',
-      'width': opt.closeBoxWidth + opt.closeBoxEnlargeWidth * 2 + 'px',
-      'height': opt.closeBoxHeight + opt.closeBoxEnlargeHeight * 2 + 'px'
+      'width': width + opt.closeBoxEnlargeWidth * 2 + 'px',
+      'height': height + opt.closeBoxEnlargeHeight * 2 + 'px'
     }, {
       'duration': 'fast',
       'easing': 'swing',
@@ -2930,19 +2845,16 @@
     if (isBox) {
       // 如果是盒子(上方条件)，则调整盒子内容器的内边距
       $dom.find('.iconbox-area__container').animate({
-        'paddingRight': 0,
-        'padding': opt.closeBoxPadding + opt.closeBoxEnlargeWidth + 'px'
+        'margin': opt.closeBoxEnlargeWidth + 'px'
       }, 'fast', function () {
-        $(this).css({
-          'paddingRight': opt.closeBoxPadding + opt.closeBoxEnlargeWidth + 'px'
-        })
       });
     }
   }
 
   /**
    * [recoverDom 恢复放大的节点]
-   * @param  {[type]}  $dom            [description]
+   * @param  {[type]}  $flagDom        [description]
+   * @param  {[type]}  $this           [description]
    * @param  {[type]}  left            [description]
    * @param  {[type]}  top             [description]
    * @param  {[type]}  width           [description]
@@ -2951,8 +2863,8 @@
    * @param  {[type]}  closeBoxPadding [description]
    * @return {[type]}                  [description]
    */
-  function recoverDom($dom, left, top, width, height, isBox, closeBoxPadding) {
-    $dom.animate({
+  function recoverDom($flagDom, $this, left, top, width, height, isBox, closeBoxPadding) {
+    $flagDom.animate({
       'left': left + 'px',
       'top': top + 'px',
       'width': width + 'px',
@@ -2961,27 +2873,33 @@
       'duration': 'fast',
       'easing': 'swing',
       'step': function () {
-        $dom.css('overflow', 'visible');
+        $flagDom.css('overflow', 'visible');
       },
       'complete': function () {
-        $dom.css({
-          'cursor': 'pointer',
-          'zIndex': 1
-        });
+        if ($this === null) {
+          $flagDom.css({
+            'cursor': 'pointer',
+            'zIndex': 1
+          });
+        } else {
+          $this.css({
+            // 'left': left + 'px',
+            // 'top': top + 'px',
+            'cursor': 'pointer',
+            'zIndex': 1,
+            'opacity': 1
+          });
+          $flagDom.remove();
+        }
       }
     });
     if (isBox) {
       // 如果是盒子(上方条件)，则调整盒子内容器的内边距
-      $dom.find('.iconbox-area__container').animate({
-        'paddingRight': 0,
-        'padding': closeBoxPadding + 'px'
+      $flagDom.find('.iconbox-area__container').animate({
+        'margin': '0px'
       }, 'fast', function () {
-        $(this).css({
-          'paddingRight': closeBoxPadding + 'px'
-        });
+        
       });
-      // 去掉盒子的位置记录
-      clearDomPrevAttr($dom);
     }
   }
 
@@ -2996,11 +2914,9 @@
     var iconTop = parseInt($iconBelow.css('top'));
     var iconWidth = parseInt($iconBelow.css('width'));
     var iconHeight = parseInt($iconBelow.css('height'));
-    // var iconWidthChange = Math.ceil(iconWidth * opt.closeBoxEnlargeScale);
-    // var iconHeightChange = Math.ceil(iconHeight * opt.closeBoxEnlargeScale);
     var moveIconObj = opt.moveIconObj;
     // 隐藏指示位置图标
-    moveIconObj.$flagDom.hide();
+    hideFlagDom(opt);
     moveIconObj.$iconBelow = $iconBelow;
     if (!$iconBelow.attr('prevLeft')) {
       // 如果盒子没有放大，即没有原始位置记录(上方条件)
@@ -3011,28 +2927,33 @@
         'prevWidth': iconWidth + 'px',
         'prevHeight': iconHeight + 'px'
       })
-      enlargeDom($iconBelow, iconLeft, iconTop, opt, true);
-      // .animate({
-      //   'left': iconLeft - opt.closeBoxEnlargeWidth + 'px',
-      //   'top': iconTop - opt.closeBoxEnlargeHeight + 'px',
-      //   'width': opt.closeBoxWidth + opt.closeBoxEnlargeWidth * 2 + 'px',
-      //   'height': opt.closeBoxHeight + opt.closeBoxEnlargeHeight * 2 + 'px'
-      //   // 'padding': opt.closeBoxPadding + opt.closeBoxEnlargeWidth + 'px'
-      // }, 'fast');
+      enlargeDom($iconBelow, iconLeft, iconTop, iconWidth, iconHeight, opt, true);
     }
     moveIconObj.$prevIconBelow = $iconBelow;
   }
 
-  function groupIcons(domData, data, moveLocation, opt) {
-    var $dom = domData.$dom;
-    var moveIndex = getIndexByLocation(moveLocation.location, data, opt);
-    var $dstDom = data[moveIndex].$dom;
-    var dstData = groupData(data, getIconIndex($dom, opt), moveIndex, opt);
-    var $groupObj = groupDoms($dom, $dstDom, opt, dstData);
-    $this = $groupObj.$this;
-    $iconBelow = $groupObj.$iconBelow;
-    recoverIconBelow($this, opt);
+  function showFlagDom(opt) {
+    if (opt.moveObj) {
+      opt.moveObj.show();
+    }
   }
+
+  function hideFlagDom(opt) {
+    if (opt.moveObj) {
+      opt.moveObj.hide();
+    }
+  }
+
+  // function groupIcons(domData, data, moveLocation, opt) {
+  //   var $dom = domData.$dom;
+  //   var moveIndex = getIndexByLocation(moveLocation.location, data, opt);
+  //   var $dstDom = data[moveIndex].$dom;
+  //   var dstData = groupData(data, getIconIndex($dom, opt), moveIndex, opt);
+  //   var $groupObj = groupDoms($dom, $dstDom, opt, dstData);
+  //   $this = $groupObj.$this;
+  //   $iconBelow = $groupObj.$iconBelow;
+  //   recoverIconBelow(opt);
+  // }
 
   /**
    * [adjustPageBox 调整分页栏图标数量]
@@ -3138,7 +3059,7 @@
       var $dom = element.$dom;
       var location = element.location;
       if (i === excludeIndex) {
-        showToLocation(opt.moveIconObj.$flagDom, location, opt);
+        showToLocation(opt.moveObj, location, opt);
       } else {
         animateToLocation($dom, location, opt);
       }
@@ -3487,11 +3408,11 @@
     // 盒子放大
     $this.animate({
       'backgroundColor': opt.openBoxColor,
-      'width': opt.width - opt.openBoxPadding * 2 + 'px',
-      'height': opt.height - opt.openBoxPadding * 2 + 'px',
+      'width': opt.width + 'px',
+      'height': opt.height + 'px',
       'left': opt.currentPageIndex * opt.width + 'px',
-      'top': '0',
-      'padding': opt.openBoxPadding
+      'top': '0'
+      // 'padding': opt.openBoxPadding
     }, function () {
       opt.ableClickBox = true;
       if (opt.ableChecked) {
@@ -3513,19 +3434,10 @@
         'height': opt.openBoxHeight + 'px',
         'overflow': 'auto'
       });
-      if (hasScrollBar($areaContainer)) {
-        // 如果有滚动条(上方条件)，则显示滚动条
-        var wholeHeight = $areaContainer.get(0).scrollHeight;
-        var showHeight = $areaContainer.outerHeight();
-        var borderRadius = 20;
-        var scrollMoveHeight = showHeight - borderRadius * 2;
-        // 滚动条中滑块的高度 = 滚动条可以滚动的高度 / 总高度(加上滚动区域的高度) * 容器的高度
-        var scrollBarHeight = Math.floor(scrollMoveHeight / wholeHeight * showHeight);
-        $this.find('.iconbox-scrollbar').css({
-          'top': borderRadius + 'px',
-          'height': scrollBarHeight + 'px'
-        }).fadeIn();
-      }
+      // 可能图标还没有移动到位，高度就还没确定下来，所以延迟一下
+      setTimeout(function () {
+        adjustScrollBar($areaContainer);
+      }, 200);
     });
     // 盒子里的容器放大
     $this.find('.iconbox-area').css({
@@ -3555,7 +3467,6 @@
     var dataBox = getDataByLocation($this.attr('location'), opt.data, opt.locationObj);
     if (dataBox && dataBox.children && dataBox.children.length) {
       for (var i = 0; i < dataBox.children.length; i++) {
-        console.log(i)
         var dataIcon = dataBox.children[i];
         setLocations(dataIcon.$dom, dataIcon, opt, 'animate');
       }
@@ -3588,7 +3499,6 @@
       'overflow': 'hidden'
     });
     $this.find('.iconbox-scrollbar').fadeOut();
-    console.log(opt.closeBoxWidth)
     // 盒子缩小
     $this.animate({
       'backgroundColor': opt.closeBoxColor,
@@ -3629,7 +3539,12 @@
       opt.ableClickBox = true;
     });
     // 盒子内容器缩小
-    $this.find('.iconbox-area').animate({
+    $this.find('.iconbox-area').css({
+      'left': opt.openBoxMarginLeft + 'px',
+      'right': opt.openBoxMarginRight + 'px',
+      'top': opt.openBoxMarginTop + 'px',
+      'bottom': opt.openBoxMarginBottom + 'px'
+    }).animate({
       'left': '0px',
       'right': '0px',
       'top': '0px',
@@ -3670,9 +3585,35 @@
     // $dom.scrollTop(1);
     // var existScrollBar = ($dom.scrollTop() > 0);
     // $dom.scrollTop(0);
-    console.log($dom.outerHeight() + '-' + $dom.get(0).scrollHeight)
+    
+    // console.log($dom.outerHeight() + '-' + $dom.get(0).scrollHeight)
     // return existScrollBar;
     return $dom.outerHeight() !== $dom.get(0).scrollHeight;
+  }
+
+  /**
+   * [adjustScrollBar 调整滚动条块高度并显示]
+   * @param  {[type]} $areaContainer [description]
+   * @return {[type]}                [description]
+   */
+  function adjustScrollBar($areaContainer) {
+    if (hasScrollBar($areaContainer)) {
+      // 如果有滚动条(上方条件)，则显示滚动条
+      var scrollTop = $areaContainer.scrollTop();
+      var wholeHeight = $areaContainer.get(0).scrollHeight;
+      var showHeight = $areaContainer.outerHeight();
+      // console.log(showHeight + '--' + wholeHeight)
+      var borderRadius = 20;
+      var scrollMoveHeight = showHeight - borderRadius * 2;
+      // 滚动条中滑块的高度 = 滚动条可以滚动的高度 / 总高度(加上滚动区域的高度) * 容器的高度
+      var scrollBarHeight = Math.floor(scrollMoveHeight / wholeHeight * showHeight);
+      var scrollBarInfo = getScrollBarInfo(scrollTop, showHeight, wholeHeight);
+      var $scrollBar = $areaContainer.siblings('.iconbox-scrollbar');
+      $scrollBar.css({
+        'top': scrollBarInfo.top + 'px',
+        'height': scrollBarInfo.height + 'px'
+      }).fadeIn();
+    }
   }
 
   /**
@@ -3842,20 +3783,45 @@
     $boxContainer.scroll(function () {
       var scrollTop = $boxContainer.scrollTop();
       var showHeight = $boxContainer.outerHeight();
-      var borderRadius = 20;
-      var scrollMoveHeight = showHeight - borderRadius * 2;
       var wholeHeight = $boxContainer.get(0).scrollHeight;
-
-      // var scrollBarHeight = Math.floor(scrollMoveHeight / wholeHeight * showHeight);
-      // // 滚动条剩余部分可以滚的高度 / 可以滚动的部分 * 滚动部分
-      // var moveTop = Math.floor((scrollMoveHeight - scrollBarHeight) / (wholeHeight - showHeight) * scrollTop);
-      // console.log((scrollMoveHeight - scrollBarHeight) / (wholeHeight - showHeight));
-      var moveTop = Math.floor(scrollMoveHeight / wholeHeight * scrollTop);
-      console.log('-------------')
-      console.log(scrollMoveHeight / wholeHeight);
+      var scrollBarTop = getScrollBarInfo(scrollTop, showHeight, wholeHeight).top;
+      // console.log(scrollTop + '-------------' + wholeHeight)
+      // console.log(scrollMoveHeight / wholeHeight);
       $boxContainer.siblings('.iconbox-scrollbar').css({
-        'top': borderRadius + moveTop + 'px'
+        'top': scrollBarTop + 'px'
       });
+    });
+  }
+
+  /**
+   * [getScrollBarInfo 获得滚动条块上部的位置高度]
+   * @param  {[type]} scrollTop   [description]
+   * @param  {[type]} showHeight  [description]
+   * @param  {[type]} wholeHeight [description]
+   * @return {[type]}             [description]
+   */
+  function getScrollBarInfo(scrollTop, showHeight, wholeHeight) {
+    // 滚动条上下的间距，与圆角大小相同
+    var borderRadius = 20;
+    // 滚动条可以移动的高度
+    var scrollMoveHeight = showHeight - borderRadius * 2;
+    var moveTop = Math.floor(scrollMoveHeight / wholeHeight * scrollTop);
+    var scrollBarHeight = Math.floor(scrollMoveHeight / wholeHeight * showHeight);
+    return {
+      top: borderRadius + moveTop,
+      height: scrollBarHeight
+    }
+  }
+
+  /**
+   * [bindMenuClick 绑定菜单点击事件]
+   * @param  {[type]} $dom [description]
+   * @param  {[type]} func [description]
+   * @return {[type]}      [description]
+   */
+  function bindMenuClick($dom, func) {
+    $dom.click(function (e) {
+      func(e);
     });
   }
 }));
