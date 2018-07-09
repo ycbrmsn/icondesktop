@@ -1,7 +1,7 @@
 /**
  * 模拟手机桌面
  * @auther jzw
- * @version 2.1.8
+ * @version 2.0.0
  * @history
  *   1.0.0 2018-01-16 完成基本功能
  *   1.0.2 2018-01-18 加上盒子多选功能
@@ -34,20 +34,9 @@
  *   1.6.0 2018-01-27 新增根据图标的一个属性或多个属性数据来查询该图标的具体数据的方法
  *   1.6.1 2018-01-30 修改jquery1.8.3版本下打开盒子后隐藏图标未显示的问题
  *   1.6.2 2018-01-30 修改盒子交换后节点未进行移动导致数据错误的问题
- *   2.0.0 2018-03-02 插件名称由iconbox改为icondesktop。划分桌面区域。增加桌面工具。
- *     桌面工具在桌面上放不下时将不会显示出来。调整一行或一列时的图标位置。桌面大小变化时调整图标位置。
- *     图标/盒子/工具皆可调换位置。移动时可在不同页移动。添加桌面右键菜单功能。盒子中的图标可移动，可移出盒子。
- *   2.0.1 2018-03-05 打开盒子内支持上下滑动。修改盒子滚动到中间位置刷新后桌面盒子内图标位置不正常的问题。
- *     修改多选时获取多选数据报错的问题。新分组名称可配置。
- *   2.1.0 2018-03-05 增加桌面toast功能
- *   2.1.1 2018-03-05 长按按钮还不能拖动时，移动光标距离超过特定值之后将不能再拖动
- *   2.1.2 2018-03-05 修改滚动条判断方法。调整翻页栏节点位置
- *   2.1.3 2018-03-07 修改工具栏里的东西无法点击的问题
- *   2.1.4 2018-03-07 修改调整翻页栏节点位置后新增的翻页按钮位置错乱的问题
- *   2.1.5 2018-03-17 修改物体放不下时报错的问题
- *   2.1.6 2018-03-17 修改2.1.3版本修改后产生的不能拖动问题
- *   2.1.7 2018-03-19 新增配置：桌面大小改变时重新刷新桌面的延迟时间
- *   2.1.8 2018-03-28 修改低版本jquery组装dom时里面有script便签会提取出来产生错误的问题
+ *   2.0.0 2018-03-02 插件名称由iconbox改为icondesktop。划分桌面区域。增加桌面工具。桌面工具在桌面上放不下时将不会显示出来。
+ *     调整一行或一列时的图标位置。桌面大小变化时调整图标位置。图标/盒子/工具皆可调换位置。移动时可在不同页移动。
+ *     添加桌面右键菜单功能。盒子中的图标可移动，可移出盒子。
  */
 ;(function (factory) {
   if (typeof define === "function" && define.amd) {
@@ -94,10 +83,6 @@
       ableDel: false, // 图标是否可以删除
       ableDrag: true, // 图标是否可以拖动
       mouseDownIconDuration: 500, // 拖动需要长按的时间
-      toastTime: 3000, // toast显示持续时间
-      resizeTimeout: 1000, // 桌面大小改变时重新刷新桌面的延迟时间，主要是为了避免桌面大小逐渐变化时进行的频繁刷新
-      ignoreDistance: 10, // 拖动图标之前可以忽略的移动距离(防止手抖)
-      newGroupName: '新分组', // 新分组的名称
       openBoxIconClick: function (data) {}, // 盒子打开时里面的图标点击事件
       menus: [
         {
@@ -169,12 +154,7 @@
 
       // 桌面大小改变重新初始化
       $(this).off('resize').on('resize', function () {
-        if (opt.resizetimeout) {
-          clearTimeout(opt.resizetimeout);
-        }
-        opt.resizetimeout = setTimeout(function () {
-          refreshDesktop($root, opt);
-        }, opt.resizeTimeout);
+        refreshDesktop($root, opt);
       });
 
       $(this).off('click').on('click', function (argument) {
@@ -195,8 +175,6 @@
       $(this).off('mousedown').on('mousedown', function (e) {
         isMouseDown = true;
         mousedownX = e.pageX;
-        e.preventDefault();
-        e.stopPropagation();
       });
       $(this).off('mousemove').on('mousemove', function (e) {
         if (ev) {
@@ -227,48 +205,6 @@
           // 取消盒子/图标移动
           cancelIconMove(opt);
         }
-      });
-
-      // 按下盒子滑动
-      var mousedownY;
-      $(this).off('mousedown', '.iconbox__open .iconbox-area__container')
-      .on('mousedown', '.iconbox__open .iconbox-area__container', function (e) {
-        isMouseDown = true;
-        mousedownY = e.pageY;
-        e.preventDefault();
-        e.stopPropagation();
-        opt.pressBoxContainerTime = new Date().getTime();
-      });
-      $(this).off('mousemove', '.iconbox__open .iconbox-area__container')
-      .on('mousemove', '.iconbox__open .iconbox-area__container', function (e) {
-        if (ev) {
-          ev.returnValue = false
-        }
-        e.preventDefault();
-        e.stopPropagation();
-        if (isMouseDown) {
-          var currentY = e.pageY;
-          var changeDistance = currentY - mousedownY;
-          var scrollTop = $(this).scrollTop();
-          $(this).scrollTop(scrollTop - changeDistance > 0 ? scrollTop - changeDistance : 0);
-          mousedownY = currentY;
-          opt.slideInboxContainerFinishTime = new Date().getTime();
-          opt.moveIconObj.finishTime = opt.slideInboxContainerFinishTime;
-        }
-      });
-      $(this).off('mouseup', '.iconbox__open .iconbox-area__container')
-      .on('mouseup', '.iconbox__open .iconbox-area__container', function (e) {
-        isMouseDown = false;
-        var currentTime = new Date().getTime();
-        if (currentTime - opt.pressBoxContainerTime > 500
-          || currentTime - opt.slideInboxContainerFinishTime < opt.moveIconObj.openPeriod) {
-          // 长按时间超过500毫秒或者滑动盒子内容器的结束时间小于特定值(上方条件)，设置下列时间，盒子将不会关闭
-          opt.moveIconObj.finishTime = new Date().getTime();
-        }
-      });
-      $(this).off('mouseleave', '.iconbox__open .iconbox-area__container')
-      .on('mouseleave', '.iconbox__open .iconbox-area__container', function (e) {
-        isMouseDown = false;
       });
 
       // 打开/关闭盒子
@@ -302,42 +238,6 @@
         }
       });
 
-      // 阻止工具里面的图片拖动
-      $(this).off('mousedown', '.iconbox-tool img').on('mousedown', '.iconbox-tool img', function (e) {
-        if (ev) {
-          ev.returnValue = false
-        }
-        e.preventDefault();
-      });
-      // 点击文本区域不会触发工具拖动事件
-      $(this).off('mousedown', '.iconbox-tool input,.iconbox-tool textarea')
-      .on('mousedown', '.iconbox-tool input,.iconbox-tool textarea', function (e) {
-        e.stopPropagation();
-      });
-      // 通过定时器触发上级拖动事件，避免工具里面的东西无法点击
-      $(this).off('mousedown', '.iconbox-tool > *').on('mousedown', '.iconbox-tool > *', function (e) {
-        if (this.tagName === 'INPUT' || this.tagName === 'TEXTAREA') {
-
-        } else {
-          var $this = $(this);
-          opt.pressToolTime = new Date().getTime();
-          opt.pressToolTimeout = setTimeout(function () {
-            $this.blur()
-            $this.parent().trigger('mousedown');
-          }, 500);
-        }
-        e.stopPropagation();
-      });
-      $(this).off('mouseup', '.iconbox-tool > *').on('mouseup', '.iconbox-tool > *', function (e) {
-        if (opt.pressToolTimeout) {
-          clearTimeout(opt.pressToolTimeout);
-          opt.pressToolTimeout = null;
-        }
-      });
-
-      this.onselectstart = function () {
-        return false;
-      }
       // 阻止冒泡触发拖动事件等
       $(this).off('mousedown', '.iconbox-icontitleinput').on('mousedown', '.iconbox-icontitleinput', function (e) {
         if (opt.ableEditTitle) {
@@ -458,8 +358,6 @@
             if (element.checked) {
               checkedData.push(element);
             }
-          } else if (element.type === 'tool') { // 工具不具备多选按钮
-
           } else {
             // 是盒子，则循环里面的内容
             for (var j = 0; j < element.children.length; j++) {
@@ -538,26 +436,6 @@
           }
         }
         return d;
-      },
-      /**
-       * [showToast toast提示]
-       * @param  {[type]} txt      [提示文字]
-       * @param  {[type]} duration [toast显示持续时间]
-       * @return {[type]}          [description]
-       */
-      showToast: function (txt, duration) {
-        var $toast = $root.find('.icondesktop-toast');
-        $toast.children('.icondesktop-toast__container').text(txt);
-        var width = $toast.show().outerWidth();
-        $toast.hide();
-        $toast.css('marginLeft', - Math.floor(width / 2) + 'px');
-        $toast.fadeIn();
-        if (opt.toastTime) {
-          clearTimeout(opt.toastTimeout);
-        }
-        opt.toastTimeout = setTimeout(function () {
-          $toast.fadeOut();
-        }, duration || opt.toastTime);
       }
     }
     return returnVal;
@@ -615,7 +493,7 @@
       // 一个空jquery对象，用来置空对比的下方icon
       $empty: $(''),
       // 拖动对象是否位于一个盒子/图标上
-      isSuspended: false
+      isSuspended: false,
     };
     moveIconObj.$prevIconBelow = moveIconObj.$empty;
     opt.moveIconObj = moveIconObj;
@@ -802,9 +680,6 @@
       return $('');
     }
     var $tool = $(dataTool.content);
-    if ($tool.size() > 1) { // 小版本的jquery会把script标签提取出来，此处去掉提取出来的script标签
-      $tool = $tool.eq(0);
-    }
     var dimension = getToolDimension(opt, dataTool);
     $tool.addClass('icondesktopbox iconbox-tool');
     $tool.css({
@@ -891,10 +766,10 @@
         $pageNum.addClass('icondesktop-pageitem__active');
       }
     }
-    // 添加分页栏
-    $root.append($pagePanel);
     // 添加桌面
     $root.append($dl);
+    // 添加分页栏
+    $root.append($pagePanel);
     $root.find('.icondesktop-slidebox').append(opt.$closeBoxBackground);
     // 添加菜单
     var $menu = $('<div class="icondesktop-menu"></div>');
@@ -909,19 +784,6 @@
     $menu.append($menuList);
     $menu.hide();
     $root.append($menu);
-    // 添加toast提示
-    var $toast = $('<div class="icondesktop-toast">'
-      + '<div class="icondesktop-toast__size icondesktop-toast__topleft"></div>'
-      + '<div class="icondesktop-toast__size icondesktop-toast__topright"></div>'
-      + '<div class="icondesktop-toast__size icondesktop-toast__bottomleft"></div>'
-      + '<div class="icondesktop-toast__size icondesktop-toast__bottomright"></div>'
-      + '<div class="icondesktop-toast__line icondesktop-toast__top"></div>'
-      + '<div class="icondesktop-toast__line icondesktop-toast__bottom"></div>'
-      + '<div class="icondesktop-toast__line icondesktop-toast__left"></div>'
-      + '<div class="icondesktop-toast__line icondesktop-toast__right"></div>'
-      + '<div class="icondesktop-toast__line icondesktop-toast__container"></div>'
-      + '</div>').hide();
-    $root.append($toast);
   }
 
   /**
@@ -981,8 +843,11 @@
         'width': opt.closeBoxWidth + 'px',
         'height': opt.closeBoxHeight + 'px'
       });
-      // 盒子内容器滚动到最上面
-      $box.find('.iconbox-area__container').scrollTop(0);
+      // 盒子内容器大小
+      // $box.find('.iconbox-area__container').css({
+      //   'width': opt.closeBoxWidth + 'px',
+      //   'height': opt.closeBoxHeight + 'px'
+      // });
       
       // 设置盒子内小图标大小、外边距
       // $box.find('.iconbox-a').css({
@@ -1248,21 +1113,10 @@
     var $this = opt.moveObj;
     var $flagDom = opt.flagObj;
     var moveIconObj = opt.moveIconObj;
-    moveIconObj.mouseDownIconCurrentPoint.x = Math.floor(e.pageX);
-    moveIconObj.mouseDownIconCurrentPoint.y = Math.floor(e.pageY);
-    var movedX = Math.abs(moveIconObj.mouseDownIconPrevPoint.x - moveIconObj.mouseDownIconCurrentPoint.x);
-    var movedY = Math.abs(moveIconObj.mouseDownIconPrevPoint.y - moveIconObj.mouseDownIconCurrentPoint.y);
-    // console.log(movedX + ', ' + movedY);
-    // 在处于可拖动状态之前，移动距离超过特定值时，将取消开始拖动
-    if (!$flagDom && (movedX > opt.ignoreDistance || movedY > opt.ignoreDistance)) {
-      clearTimeout(moveIconObj.timeout);
-      $this.attr({
-        'isMouseDownIcon': ''
-      });
-      return;
-    }
     // 图标处于在移动状态
     if ($this.attr('isMouseDownMove')) {
+      moveIconObj.mouseDownIconCurrentPoint.x = Math.floor(e.pageX);
+      moveIconObj.mouseDownIconCurrentPoint.y = Math.floor(e.pageY);
       // 更新盒子/图标的移动位置
       $flagDom.css({
         'left': parseInt($flagDom.css('left')) + moveIconObj.mouseDownIconCurrentPoint.x - moveIconObj.mouseDownIconPrevPoint.x + 'px',
@@ -1571,7 +1425,7 @@
     if (dstData.img) {
       // 目标是个图标
       newData = {
-        title: opt.newGroupName,
+        title: '新分组',
         extraClass: dstData.extraClass,
         size: dstData.size,
         location: dstData.location,
@@ -3045,7 +2899,7 @@
   }
 
   function getPageBox($icon) {
-    return $icon.parents('.icondesktop-slidebox').siblings('.icondesktop-pagination').children().eq(0);
+    return $icon.parents('.icondesktop-slidebox').next().children().eq(0);
   }
 
   /**
@@ -3761,8 +3615,8 @@
   function sortByLocation(a, b) {
     var locationInfoA = parseLocationInfo(a.location);
     var locationInfoB = parseLocationInfo(b.location);
-    if (locationInfoA == null || locationInfoB == null) { // 如果有东西放不下，则按照之前顺序不变
-      return -1;
+    if (locationInfoA == null || locationInfoB == null) {
+      debugger
     }
     if (locationInfoA.page < locationInfoB.page) {
       return -1;
@@ -4005,7 +3859,7 @@
     
     // console.log($dom.outerHeight() + '-' + $dom.get(0).scrollHeight)
     // return existScrollBar;
-    return $dom.outerHeight() < $dom.get(0).scrollHeight;
+    return $dom.outerHeight() !== $dom.get(0).scrollHeight;
   }
 
   /**
@@ -4233,7 +4087,7 @@
    * @return {[type]}           [void]
    */
   function bindCheckboxClick($checkbox, data, parentData) {
-    $checkbox.click(function (e) {
+    $checkbox.off().click(function (e) {
       e.stopPropagation();
       if ($(this).hasClass('iconbox-checkbox__checked')) {
         // 不选

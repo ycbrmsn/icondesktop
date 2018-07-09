@@ -1,3 +1,4 @@
+@toastBorderRadius: 5px;
 body {
   margin: 0;
 }
@@ -31,6 +32,9 @@ body {
 .iconbox__open {
   position: absolute; overflow-x: hidden; overflow-y: auto;
   .iconbox-title {
+    cursor: auto;
+  }
+  .iconbox-area {
     cursor: auto;
   }
   // .iconbox-area {
@@ -78,6 +82,7 @@ body {
 /** 盒子标题 */
 .iconbox-title {
   color: #fff; text-align: center; width: 100%; left: 0; display: block; cursor: pointer;
+  margin-top: 20px;
 }
 /** 盒子内图标组 */
 .iconbox-a {
@@ -89,7 +94,7 @@ body {
 }
 /** 盒子内的范围，用于移出盒子 */
 .iconbox-area {
-  position: absolute; overflow: hidden; cursor: auto;
+  position: absolute; overflow: hidden;
 }
 .iconbox-area__container {
   position: absolute; overflow: hidden; width: 100%; height: 100%;
@@ -127,7 +132,7 @@ body {
   position: absolute; right: 0; top: 20px; bottom: 20px;
 }
 .iconbox-scrollbar {
-  width: 2px; position: absolute; right: 10px; background-color: #fff;
+  width: 2px; position: absolute; right: 10px; background-color: #fff; display: none;
 }
 /** 盒子内图标 */
 .iconbox-img {
@@ -152,4 +157,42 @@ body {
   &:hover {
     background-color: #bcbcbc;
   }
+}
+/** 消息提示 */
+.icondesktop-toast {
+  position: absolute; bottom: 70px; left: 50%;
+}
+.icondesktop-toast__size {
+  width: @toastBorderRadius; height: @toastBorderRadius; position: absolute;
+}
+.icondesktop-toast__topleft {
+  background: url(../img/toast_topleft.png) no-repeat; left: 0; top: 0;
+}
+.icondesktop-toast__topright {
+  background: url(../img/toast_topright.png) no-repeat; right: 0; top: 0;
+}
+.icondesktop-toast__bottomleft {
+  background: url(../img/toast_bottomleft.png) no-repeat; left: 0; bottom: 0;
+}
+.icondesktop-toast__bottomright {
+  background: url(../img/toast_bottomright.png) no-repeat; right: 0; bottom: 0;
+}
+.icondesktop-toast__line {
+  background: url(../img/toast_line.png); 
+}
+.icondesktop-toast__top {
+  position: absolute; top: 0; left: @toastBorderRadius; right: @toastBorderRadius; height: @toastBorderRadius;
+}
+.icondesktop-toast__bottom {
+  position: absolute; bottom: 0; left: @toastBorderRadius; right: @toastBorderRadius; height: @toastBorderRadius;
+}
+.icondesktop-toast__left {
+  position: absolute; top: @toastBorderRadius; bottom: @toastBorderRadius; left: 0; width: @toastBorderRadius;
+}
+.icondesktop-toast__right {
+  position: absolute; top: @toastBorderRadius; bottom: @toastBorderRadius; right: 0; width: @toastBorderRadius;
+}
+.icondesktop-toast__container {
+  position: relative; margin: @toastBorderRadius; padding: 1px 7px; color: #fff; font-size: 16px;
+  line-height: 25px; height: 25px;
 }

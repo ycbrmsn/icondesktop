@@ -1,7 +1,7 @@
 /**
  * 模拟手机桌面
  * @auther jzw
- * @version 2.1.8
+ * @version 2.1.6
  * @history
  *   1.0.0 2018-01-16 完成基本功能
  *   1.0.2 2018-01-18 加上盒子多选功能
@@ -46,8 +46,6 @@
  *   2.1.4 2018-03-07 修改调整翻页栏节点位置后新增的翻页按钮位置错乱的问题
  *   2.1.5 2018-03-17 修改物体放不下时报错的问题
  *   2.1.6 2018-03-17 修改2.1.3版本修改后产生的不能拖动问题
- *   2.1.7 2018-03-19 新增配置：桌面大小改变时重新刷新桌面的延迟时间
- *   2.1.8 2018-03-28 修改低版本jquery组装dom时里面有script便签会提取出来产生错误的问题
  */
 ;(function (factory) {
   if (typeof define === "function" && define.amd) {
@@ -95,7 +93,6 @@
       ableDrag: true, // 图标是否可以拖动
       mouseDownIconDuration: 500, // 拖动需要长按的时间
       toastTime: 3000, // toast显示持续时间
-      resizeTimeout: 1000, // 桌面大小改变时重新刷新桌面的延迟时间，主要是为了避免桌面大小逐渐变化时进行的频繁刷新
       ignoreDistance: 10, // 拖动图标之前可以忽略的移动距离(防止手抖)
       newGroupName: '新分组', // 新分组的名称
       openBoxIconClick: function (data) {}, // 盒子打开时里面的图标点击事件
@@ -169,12 +166,7 @@
 
       // 桌面大小改变重新初始化
       $(this).off('resize').on('resize', function () {
-        if (opt.resizetimeout) {
-          clearTimeout(opt.resizetimeout);
-        }
-        opt.resizetimeout = setTimeout(function () {
-          refreshDesktop($root, opt);
-        }, opt.resizeTimeout);
+        refreshDesktop($root, opt);
       });
 
       $(this).off('click').on('click', function (argument) {
@@ -335,9 +327,6 @@
         }
       });
 
-      this.onselectstart = function () {
-        return false;
-      }
       // 阻止冒泡触发拖动事件等
       $(this).off('mousedown', '.iconbox-icontitleinput').on('mousedown', '.iconbox-icontitleinput', function (e) {
         if (opt.ableEditTitle) {
@@ -802,9 +791,6 @@
       return $('');
     }
     var $tool = $(dataTool.content);
-    if ($tool.size() > 1) { // 小版本的jquery会把script标签提取出来，此处去掉提取出来的script标签
-      $tool = $tool.eq(0);
-    }
     var dimension = getToolDimension(opt, dataTool);
     $tool.addClass('icondesktopbox iconbox-tool');
     $tool.css({

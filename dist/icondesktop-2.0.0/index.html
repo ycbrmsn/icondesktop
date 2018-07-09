@@ -6,8 +6,8 @@
   <script type="text/javascript" src="js/jquery-debug.js"></script>
   <script type="text/javascript" src="js/jquery.color-2.1.0.min.js"></script>
   <script type="text/javascript" src="js/jquery.resizediv.js"></script>
-  <script type="text/javascript" src="js/jquery.icondesktop.js"></script>
-  <link rel="stylesheet" type="text/css" href="css/icondesktop.css">
+  <script type="text/javascript" src="js/jquery.icondesktop-2.0.0.js"></script>
+  <link rel="stylesheet" type="text/css" href="css/icondesktop-2.0.0.css">
 </head>
 <body>
   <div style="width: 90%; height: 588px; margin: 0 0 0 10%;" class="icondesktop" id="icondesktop"></div>
@@ -21,7 +21,6 @@
     <option>ableDrag</option>
   </select><input type="button" onclick="desktop.switchState($(this).prev().val());" value="切换">
   <input type="button" onclick="console.log(desktop.getIconData({title:'图标就是2',img:'img/email.png'}));" value="查询图标数据">
-  <input type="button" onclick="desktop.showToast('呵呵')" value="桌面提示">
   <script type="text/javascript">
     var desktop = $('#icondesktop').icondesktop({
       data: [
@@ -68,7 +67,7 @@
           type: 'tool',
           size: '1x1',
           borderWidth: 1,
-          content: '<div style="border: 1px solid #dedede;"><a href="http://www.baidu.com" target="_blank">百度两下</a><input type="text" value="请输入需要两下的问题" style="width: 90%;"><img src="img/news.png" width="40">很好</div>'
+          content: '<div style="border: 1px solid #dedede;"><a href="http://www.baidu.com" target="_blank">百度两下</a></div>'
         },
         {
           title: '图标就是2',

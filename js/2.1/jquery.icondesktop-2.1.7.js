@@ -1,7 +1,7 @@
 /**
  * 模拟手机桌面
  * @auther jzw
- * @version 2.1.8
+ * @version 2.1.7
  * @history
  *   1.0.0 2018-01-16 完成基本功能
  *   1.0.2 2018-01-18 加上盒子多选功能
@@ -47,7 +47,6 @@
  *   2.1.5 2018-03-17 修改物体放不下时报错的问题
  *   2.1.6 2018-03-17 修改2.1.3版本修改后产生的不能拖动问题
  *   2.1.7 2018-03-19 新增配置：桌面大小改变时重新刷新桌面的延迟时间
- *   2.1.8 2018-03-28 修改低版本jquery组装dom时里面有script便签会提取出来产生错误的问题
  */
 ;(function (factory) {
   if (typeof define === "function" && define.amd) {
@@ -802,9 +801,6 @@
       return $('');
     }
     var $tool = $(dataTool.content);
-    if ($tool.size() > 1) { // 小版本的jquery会把script标签提取出来，此处去掉提取出来的script标签
-      $tool = $tool.eq(0);
-    }
     var dimension = getToolDimension(opt, dataTool);
     $tool.addClass('icondesktopbox iconbox-tool');
     $tool.css({
